@@ -63,10 +63,23 @@ async function initDatabase() {
     )
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sales (
+      id BIGSERIAL PRIMARY KEY,
+      customer_name TEXT NOT NULL,
+      product TEXT NOT NULL,
+      amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'Pendente',
+      notes TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
   console.log("Banco de dados inicializado.");
 }
 
-// Verificação de funcionamento
+// Saúde do sistema
 app.get("/health", async (req, res) => {
   let database = false;
 
@@ -124,7 +137,7 @@ app.post("/api/logout", authenticate, (req, res) => {
   res.json({ success: true });
 });
 
-// Listar contatos
+// LISTAR CLIENTES
 app.get("/api/contacts", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
@@ -134,11 +147,13 @@ app.get("/api/contacts", authenticate, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao buscar contatos." });
+    res.status(500).json({
+      error: "Erro ao buscar contatos."
+    });
   }
 });
 
-// Criar contato
+// CRIAR CLIENTE
 app.post("/api/contacts", authenticate, async (req, res) => {
   try {
     const { name, phone, email, status, notes } = req.body || {};
@@ -166,11 +181,13 @@ app.post("/api/contacts", authenticate, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao criar contato." });
+    res.status(500).json({
+      error: "Erro ao criar contato."
+    });
   }
 });
 
-// Atualizar contato
+// ATUALIZAR CLIENTE
 app.put("/api/contacts/:id", authenticate, async (req, res) => {
   try {
     const { name, phone, email, status, notes } = req.body || {};
@@ -204,11 +221,13 @@ app.put("/api/contacts/:id", authenticate, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao atualizar contato." });
+    res.status(500).json({
+      error: "Erro ao atualizar contato."
+    });
   }
 });
 
-// Excluir contato
+// EXCLUIR CLIENTE
 app.delete("/api/contacts/:id", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
@@ -225,15 +244,18 @@ app.delete("/api/contacts/:id", authenticate, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao excluir contato." });
+    res.status(500).json({
+      error: "Erro ao excluir contato."
+    });
   }
 });
 
-// Exportar contatos em CSV
+// EXPORTAR CLIENTES
 app.get("/api/contacts/export", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT name, phone, email, status, notes, created_at FROM contacts ORDER BY created_at DESC"
+      `SELECT name, phone, email, status, notes, created_at
+       FROM contacts ORDER BY created_at DESC`
     );
 
     const escapeCSV = (value) =>
@@ -248,7 +270,7 @@ app.get("/api/contacts/export", authenticate, async (req, res) => {
       "Criado em"
     ];
 
-    const lines = result.rows.map((contact) =>
+    const lines = result.rows.map(contact =>
       [
         contact.name,
         contact.phone,
@@ -277,11 +299,231 @@ app.get("/api/contacts/export", authenticate, async (req, res) => {
     res.send("\uFEFF" + csv);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao exportar contatos." });
+    res.status(500).json({
+      error: "Erro ao exportar contatos."
+    });
   }
 });
 
-// Verificação do webhook do WhatsApp
+// ===================================
+// MÓDULO DE VENDAS E PEDIDOS
+// ===================================
+
+// LISTAR VENDAS
+app.get("/api/sales", authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM sales ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erro ao buscar vendas."
+    });
+  }
+});
+
+// CADASTRAR VENDA
+app.post("/api/sales", authenticate, async (req, res) => {
+  try {
+    const {
+      customer_name,
+      product,
+      amount,
+      status,
+      notes
+    } = req.body || {};
+
+    const value = Number(amount);
+
+    if (!customer_name || !String(customer_name).trim()) {
+      return res.status(400).json({
+        error: "Informe o nome do cliente."
+      });
+    }
+
+    if (!product || !String(product).trim()) {
+      return res.status(400).json({
+        error: "Informe o produto ou serviço."
+      });
+    }
+
+    if (!Number.isFinite(value) || value < 0) {
+      return res.status(400).json({
+        error: "Informe um valor válido."
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO sales
+       (customer_name, product, amount, status, notes)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        String(customer_name).trim(),
+        String(product).trim(),
+        value,
+        status || "Pendente",
+        notes || ""
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erro ao cadastrar venda."
+    });
+  }
+});
+
+// ATUALIZAR VENDA
+app.put("/api/sales/:id", authenticate, async (req, res) => {
+  try {
+    const {
+      customer_name,
+      product,
+      amount,
+      status,
+      notes
+    } = req.body || {};
+
+    const value = Number(amount);
+
+    if (!customer_name || !String(customer_name).trim()) {
+      return res.status(400).json({
+        error: "Informe o nome do cliente."
+      });
+    }
+
+    if (!product || !String(product).trim()) {
+      return res.status(400).json({
+        error: "Informe o produto ou serviço."
+      });
+    }
+
+    if (!Number.isFinite(value) || value < 0) {
+      return res.status(400).json({
+        error: "Informe um valor válido."
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE sales
+       SET customer_name = $1,
+           product = $2,
+           amount = $3,
+           status = $4,
+           notes = $5,
+           updated_at = NOW()
+       WHERE id = $6
+       RETURNING *`,
+      [
+        String(customer_name).trim(),
+        String(product).trim(),
+        value,
+        status || "Pendente",
+        notes || "",
+        req.params.id
+      ]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({
+        error: "Venda não encontrada."
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erro ao atualizar venda."
+    });
+  }
+});
+
+// EXCLUIR VENDA
+app.delete("/api/sales/:id", authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM sales WHERE id = $1 RETURNING id",
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({
+        error: "Venda não encontrada."
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erro ao excluir venda."
+    });
+  }
+});
+
+// EXPORTAR VENDAS
+app.get("/api/sales/export", authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT customer_name, product, amount, status, notes, created_at
+       FROM sales ORDER BY created_at DESC`
+    );
+
+    const escapeCSV = (value) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const header = [
+      "Cliente",
+      "Produto",
+      "Valor",
+      "Status",
+      "Observações",
+      "Criado em"
+    ];
+
+    const lines = result.rows.map(sale =>
+      [
+        sale.customer_name,
+        sale.product,
+        sale.amount,
+        sale.status,
+        sale.notes,
+        sale.created_at
+      ].map(escapeCSV).join(";")
+    );
+
+    const csv = [
+      header.map(escapeCSV).join(";"),
+      ...lines
+    ].join("\n");
+
+    res.setHeader(
+      "Content-Type",
+      "text/csv; charset=utf-8"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="vendas.csv"'
+    );
+
+    res.send("\uFEFF" + csv);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "Erro ao exportar vendas."
+    });
+  }
+});
+
+// WEBHOOK DO WHATSAPP
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -297,7 +539,6 @@ app.get("/webhook", (req, res) => {
   res.sendStatus(403);
 });
 
-// Receber eventos do webhook
 app.post("/webhook", (req, res) => {
   const appSecret = process.env.META_APP_SECRET;
 
@@ -324,14 +565,14 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200);
 });
 
-// Página não encontrada
+// ROTA NÃO ENCONTRADA
 app.use((req, res) => {
   res.status(404).json({
     error: "Rota não encontrada."
   });
 });
 
-// Inicialização
+// INICIALIZAÇÃO
 app.listen(PORT, async () => {
   console.log(`Central de Vendas rodando na porta ${PORT}`);
 
