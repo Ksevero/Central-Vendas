@@ -29,8 +29,14 @@ small{color:#64748b}
 </style>
 </head>
 <body>
-<header><h1>Central de Vendas</h1><small style="color:#cbd5e1">Gestão de clientes e oportunidades</small></header>
+
+<header>
+<h1>Central de Vendas</h1>
+<small style="color:#cbd5e1">Gestão de clientes e oportunidades</small>
+</header>
+
 <main>
+
 <section id="login" class="card">
 <h2>Acessar painel</h2>
 <input id="username" placeholder="Usuário" autocomplete="username">
@@ -40,6 +46,7 @@ small{color:#64748b}
 </section>
 
 <section id="panel" class="hidden">
+
 <div class="stats">
 <div class="card stat">Clientes cadastrados<strong id="total">0</strong></div>
 <div class="card stat">Novos<strong id="newTotal">0</strong></div>
@@ -78,44 +85,75 @@ small{color:#64748b}
 <input id="search" placeholder="Buscar por nome ou telefone..." oninput="renderContacts()">
 <div id="contacts"></div>
 </div>
+
 </section>
 </main>
 
 <script>
 let contacts=[];
+let sessionToken=null;
 
 async function api(url,options={}){
+  const headers={
+    "Content-Type":"application/json",
+    ...(options.headers||{})
+  };
+
+  if(sessionToken){
+    headers.Authorization="Bearer "+sessionToken;
+  }
+
   const response=await fetch(url,{
     ...options,
-    headers:{"Content-Type":"application/json",...(options.headers||{})}
+    headers
   });
+
   const data=await response.json().catch(()=>({}));
-  if(!response.ok) throw new Error(data.error||"Ocorreu um erro.");
+
+  if(!response.ok){
+    throw new Error(data.error||"Ocorreu um erro.");
+  }
+
   return data;
 }
 
 async function login(){
   const message=document.getElementById("loginMessage");
   message.textContent="Entrando...";
+
   try{
-    await api("/api/login",{
+    const result=await api("/api/login",{
       method:"POST",
       body:JSON.stringify({
         username:document.getElementById("username").value,
         password:document.getElementById("password").value
       })
     });
+
+    sessionToken=result.token;
+
     document.getElementById("login").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
+
     await loadContacts();
-  }catch(error){message.textContent=error.message;}
+
+  }catch(error){
+    message.textContent=error.message;
+  }
 }
 
 async function logout(){
-  try{await api("/api/logout",{method:"POST"});}catch(e){}
+  try{
+    await api("/api/logout",{method:"POST"});
+  }catch(e){}
+
+  sessionToken=null;
+  contacts=[];
+
   document.getElementById("panel").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
   document.getElementById("password").value="";
+  document.getElementById("loginMessage").textContent="";
 }
 
 async function loadContacts(){
@@ -129,33 +167,51 @@ async function loadContacts(){
 
 function renderContacts(){
   const term=document.getElementById("search").value.toLowerCase();
+
   const filtered=contacts.filter(c=>
     (c.name||"").toLowerCase().includes(term)||
     (c.phone||"").toLowerCase().includes(term)
   );
+
   document.getElementById("total").textContent=contacts.length;
-  document.getElementById("newTotal").textContent=contacts.filter(c=>c.status==="Novo").length;
-  document.getElementById("workingTotal").textContent=contacts.filter(c=>c.status==="Em andamento").length;
+  document.getElementById("newTotal").textContent=
+    contacts.filter(c=>c.status==="Novo").length;
+  document.getElementById("workingTotal").textContent=
+    contacts.filter(c=>c.status==="Em andamento").length;
+
   const list=document.getElementById("contacts");
   list.innerHTML="";
-  if(!filtered.length){list.textContent="Nenhum cliente encontrado.";return;}
+
+  if(!filtered.length){
+    list.textContent="Nenhum cliente encontrado.";
+    return;
+  }
+
   filtered.forEach(c=>{
     const item=document.createElement("div");
     item.className="contact";
+
     const title=document.createElement("h3");
     title.textContent=c.name;
+
     const details=document.createElement("p");
-    details.textContent=[c.phone,c.email,c.status,c.notes].filter(Boolean).join(" • ");
+    details.textContent=[
+      c.phone,c.email,c.status,c.notes
+    ].filter(Boolean).join(" • ");
+
     const actions=document.createElement("div");
     actions.className="actions";
+
     const edit=document.createElement("button");
     edit.className="secondary";
     edit.textContent="Editar";
     edit.onclick=()=>editContact(c);
+
     const remove=document.createElement("button");
     remove.className="danger";
     remove.textContent="Excluir";
     remove.onclick=()=>deleteContact(c.id);
+
     actions.append(edit,remove);
     item.append(title,details,actions);
     list.append(item);
@@ -164,6 +220,7 @@ function renderContacts(){
 
 async function saveContact(){
   const id=document.getElementById("contactId").value;
+
   const data={
     name:document.getElementById("name").value,
     phone:document.getElementById("phone").value,
@@ -171,16 +228,28 @@ async function saveContact(){
     status:document.getElementById("status").value,
     notes:document.getElementById("notes").value
   };
+
+  if(!data.name.trim()){
+    document.getElementById("formMessage").textContent=
+      "Digite o nome do cliente.";
+    return;
+  }
+
   try{
     await api(id?"/api/contacts/"+id:"/api/contacts",{
       method:id?"PUT":"POST",
       body:JSON.stringify(data)
     });
-    document.getElementById("formMessage").textContent="Cliente salvo com sucesso!";
+
+    document.getElementById("formMessage").textContent=
+      "Cliente salvo com sucesso!";
+
     clearForm();
     await loadContacts();
+
   }catch(error){
-    document.getElementById("formMessage").textContent=error.message;
+    document.getElementById("formMessage").textContent=
+      error.message;
   }
 }
 
@@ -192,26 +261,60 @@ function editContact(c){
   document.getElementById("status").value=c.status||"Novo";
   document.getElementById("notes").value=c.notes||"";
   document.getElementById("formTitle").textContent="Editar cliente";
+
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
 async function deleteContact(id){
   if(!confirm("Deseja realmente excluir este cliente?"))return;
+
   try{
     await api("/api/contacts/"+id,{method:"DELETE"});
     await loadContacts();
-  }catch(error){alert(error.message);}
+  }catch(error){
+    alert(error.message);
+  }
 }
 
 function clearForm(){
-  ["contactId","name","phone","email","notes"].forEach(id=>document.getElementById(id).value="");
+  ["contactId","name","phone","email","notes"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+
   document.getElementById("status").value="Novo";
   document.getElementById("formTitle").textContent="Adicionar cliente";
 }
 
-function exportContacts(){
-  window.location.href="/api/contacts/export";
+async function exportContacts(){
+  try{
+    const response=await fetch("/api/contacts/export",{
+      headers:{
+        Authorization:"Bearer "+sessionToken
+      }
+    });
+
+    if(!response.ok){
+      const data=await response.json().catch(()=>({}));
+      throw new Error(data.error||"Erro ao exportar contatos.");
+    }
+
+    const blob=await response.blob();
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+
+    link.href=url;
+    link.download="contatos.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+  }catch(error){
+    alert(error.message);
+  }
 }
 </script>
+
 </body>
 </html>
