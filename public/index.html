@@ -9,437 +9,772 @@
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f9;color:#202938;font-family:Arial,sans-serif}
 header{background:#17243a;color:white;padding:20px}
-header h1{margin:0;font-size:23px}
-header small{color:#cbd5e1}
-main{max-width:1100px;margin:25px auto;padding:15px}
-.card{background:white;border-radius:13px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0000000c}
-input,select,textarea,button{font:inherit;padding:12px;border:1px solid #dce1e9;border-radius:8px;width:100%;margin:6px 0}
-button{background:#2463eb;color:white;border:0;font-weight:bold;cursor:pointer}
-button.secondary{background:#e9eef8;color:#24344e}
-button.danger{background:#c63d49}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat strong{display:block;font-size:25px;margin-top:9px}
-.hidden{display:none!important}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-.actions button{width:auto}
-.tabs{display:flex;gap:10px;margin-bottom:18px}
-.tabs button{margin:0}
-.tabs button.active{background:#17243a}
-.contact{border:1px solid #e6e9ef;padding:14px;border-radius:10px;margin:10px 0}
-.contact h3{margin:0 0 8px}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:0;color:#cbd5e1;font-size:13px}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:white;border-bottom:1px solid #e2e8f0}
+nav button{background:#edf1f7;color:#263449;border:0;padding:11px 15px;border-radius:8px;font-weight:bold;cursor:pointer}
+nav button.active{background:#17243a;color:white}
+main{max-width:1150px;margin:22px auto;padding:0 14px}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:white;border:1px solid #e4e8ef;border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 7px #17243a08}
+h2{font-size:19px;margin:0 0 16px}
+h3{font-size:16px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.metric{background:white;border:1px solid #e4e8ef;border-radius:12px;padding:16px}
+.metric small{color:#64748b;display:block;margin-bottom:8px}
+.metric strong{font-size:21px;overflow-wrap:anywhere}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;background:white;color:#202938}
+textarea{min-height:75px;resize:vertical}
+label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px;color:#475569}
+.field{margin-bottom:12px}
+button{cursor:pointer}
+.btn{border:0;border-radius:8px;padding:11px 15px;font-weight:bold;background:#17243a;color:white}
+.btn.secondary{background:#e8edf5;color:#263449}
+.btn.danger{background:#fee2e2;color:#991b1b}
+.btn.success{background:#dcfce7;color:#166534}
+.btn.small{padding:7px 10px;font-size:12px;margin:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #edf0f4;font-size:13px;vertical-align:middle}
+th{color:#64748b;background:#f8fafc}
 .muted{color:#64748b;font-size:13px}
-.money{font-size:20px;font-weight:bold;color:#167548}
-.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#e9eef8;font-size:12px;font-weight:bold}
-.message{min-height:20px;font-size:14px}
-h2{font-size:20px}
-@media(max-width:650px){
-.row,.stats{grid-template-columns:1fr}
-.tabs{flex-direction:column}
-.tabs button{width:100%}
+.message{font-size:13px;margin-top:10px;min-height:16px}
+.good{color:#15803d}
+.bad{color:#b91c1c}
+.tag{display:inline-block;padding:5px 8px;border-radius:20px;font-size:11px;font-weight:bold;background:#e2e8f0}
+.tag.paid{background:#dcfce7;color:#166534}
+.tag.pending{background:#fef3c7;color:#92400e}
+.tag.cancelled{background:#fee2e2;color:#991b1b}
+.progress{height:13px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin:10px 0}
+.progress div{height:100%;background:#16a34a;width:0%;transition:width .2s}
+.hidden{display:none!important}
+.login-wrap{max-width:420px;margin:55px auto;padding:0 15px}
+.login-wrap .card{padding:24px}
+.login-wrap h2{font-size:22px}
+footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
+@media(max-width:760px){
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid{grid-template-columns:1fr}
+ header{padding:17px}
+ header h1{font-size:21px}
+ nav{position:sticky;top:0;z-index:5}
+ nav button{flex:1}
 }
+@media(max-width:380px){.metrics{grid-template-columns:1fr 1fr}.metric strong{font-size:18px}}
 </style>
 </head>
 <body>
+
 <header>
-<h1>Central de Vendas</h1>
-<small>Gestão de clientes, pedidos e oportunidades</small>
+ <h1>Central de Vendas</h1>
+ <p>Gestão de clientes, vendas e financeiro</p>
 </header>
+
+<section id="loginScreen" class="login-wrap">
+ <div class="card">
+  <h2>Entrar no sistema</h2>
+  <div class="field">
+   <label for="username">Usuário</label>
+   <input id="username" autocomplete="username" placeholder="Seu usuário" value="admin">
+  </div>
+  <div class="field">
+   <label for="password">Senha</label>
+   <input id="password" type="password" autocomplete="current-password" placeholder="Sua senha">
+  </div>
+  <button class="btn" style="width:100%" onclick="login()">Entrar</button>
+  <div id="loginMessage" class="message"></div>
+ </div>
+</section>
+
+<div id="appScreen" class="hidden">
+<nav>
+ <button class="active" data-tab="clients" onclick="showTab('clients',this)">Clientes</button>
+ <button data-tab="sales" onclick="showTab('sales',this)">Vendas</button>
+ <button data-tab="finance" onclick="showTab('finance',this)">Financeiro</button>
+ <button class="secondary" onclick="logout()">Sair</button>
+</nav>
+
 <main>
-<section id="login" class="card">
-<h2>Acessar painel</h2>
-<input id="username" placeholder="Usuário" autocomplete="username">
-<input id="password" type="password" placeholder="Senha" autocomplete="current-password">
-<button onclick="login()">Entrar</button>
-<p id="loginMessage" class="message"></p>
+<!-- CLIENTES -->
+<section id="clients" class="panel active">
+ <div class="card">
+  <h2 id="formTitle">Cadastrar cliente</h2>
+  <form id="contactForm" onsubmit="saveContact(event)">
+   <input type="hidden" id="contactId">
+   <div class="grid">
+    <div class="field">
+     <label for="contactName">Nome do cliente *</label>
+     <input id="contactName" required placeholder="Nome completo">
+    </div>
+    <div class="field">
+     <label for="contactPhone">Telefone / WhatsApp</label>
+     <input id="contactPhone" placeholder="(00) 00000-0000">
+    </div>
+    <div class="field">
+     <label for="contactEmail">E-mail</label>
+     <input id="contactEmail" type="email" placeholder="cliente@email.com">
+    </div>
+    <div class="field">
+     <label for="contactNotes">Observações</label>
+     <input id="contactNotes" placeholder="Informações adicionais">
+    </div>
+   </div>
+   <div class="actions">
+    <button class="btn" type="submit">Salvar cliente</button>
+    <button class="btn secondary" type="button" onclick="clearContactForm()">Limpar</button>
+   </div>
+   <div id="contactMessage" class="message"></div>
+  </form>
+ </div>
+
+ <div class="card">
+  <h2>Clientes cadastrados</h2>
+  <div class="field">
+   <input id="contactSearch" placeholder="Pesquisar cliente..." oninput="renderContacts()">
+  </div>
+  <div class="actions">
+   <button class="btn secondary" onclick="exportContacts()">Exportar clientes CSV</button>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Observações</th><th>Ações</th></tr></thead>
+    <tbody id="contactsTable"><tr><td colspan="5">Carregando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
 </section>
 
-<section id="panel" class="hidden">
-<div class="stats">
-<div class="card stat">Clientes cadastrados<strong id="total">0</strong></div>
-<div class="card stat">Vendas registradas<strong id="salesTotal">0</strong></div>
-<div class="card stat">Total recebido<strong id="revenue">R$ 0,00</strong></div>
-</div>
+<!-- VENDAS -->
+<section id="sales" class="panel">
+ <div class="metrics">
+  <div class="metric"><small>Total de vendas</small><strong id="salesCount">0</strong></div>
+  <div class="metric"><small>Vendas pagas</small><strong id="paidCount">0</strong></div>
+  <div class="metric"><small>Pendentes</small><strong id="pendingCount">0</strong></div>
+  <div class="metric"><small>Faturamento recebido</small><strong id="salesRevenue">R$ 0,00</strong></div>
+ </div>
 
-<div class="card">
-<div class="actions" style="justify-content:space-between;align-items:center">
-<h2>Central de Vendas</h2>
-<button class="secondary" onclick="logout()">Sair</button>
-</div>
-<div class="tabs">
-<button id="clientsTab" class="active" onclick="showSection('clients')">Clientes</button>
-<button id="salesTab" onclick="showSection('sales')">Vendas e pedidos</button>
-</div>
-</div>
+ <div class="card">
+  <h2 id="saleFormTitle">Cadastrar venda ou pedido</h2>
+  <form id="saleForm" onsubmit="saveSale(event)">
+   <input type="hidden" id="saleId">
+   <div class="grid">
+    <div class="field">
+     <label for="saleCustomer">Cliente *</label>
+     <input id="saleCustomer" list="customerOptions" required placeholder="Nome do cliente">
+     <datalist id="customerOptions"></datalist>
+    </div>
+    <div class="field">
+     <label for="saleProduct">Produto ou serviço *</label>
+     <input id="saleProduct" required placeholder="O que foi vendido?">
+    </div>
+    <div class="field">
+     <label for="saleAmount">Valor (R$) *</label>
+     <input id="saleAmount" type="number" min="0" step="0.01" required placeholder="0,00">
+    </div>
+    <div class="field">
+     <label for="saleStatus">Situação</label>
+     <select id="saleStatus">
+      <option value="Pendente">Pendente</option>
+      <option value="Pago">Pago</option>
+      <option value="Cancelado">Cancelado</option>
+     </select>
+    </div>
+    <div class="field">
+     <label for="saleConsultant">Consultor responsável</label>
+     <select id="saleConsultant" onchange="updateSaleCommission()">
+      <option value="">Sem consultor</option>
+     </select>
+    </div>
+    <div class="field">
+     <label for="saleCommission">Comissão (%)</label>
+     <input id="saleCommission" type="number" min="0" max="100" step="0.01" value="0">
+    </div>
+   </div>
+   <div class="field">
+    <label for="saleNotes">Observações</label>
+    <textarea id="saleNotes" placeholder="Detalhes da venda"></textarea>
+   </div>
+   <div class="actions">
+    <button class="btn" type="submit">Salvar venda</button>
+    <button class="btn secondary" type="button" onclick="clearSaleForm()">Limpar</button>
+   </div>
+   <div id="saleMessage" class="message"></div>
+  </form>
+ </div>
 
-<section id="clientsSection">
-<div class="card">
-<h2 id="formTitle">Adicionar cliente</h2>
-<input id="contactId" type="hidden">
-<input id="name" placeholder="Nome do cliente *">
-<div class="row">
-<input id="phone" placeholder="Telefone / WhatsApp">
-<input id="email" placeholder="E-mail">
-</div>
-<select id="status">
-<option>Novo</option>
-<option>Em andamento</option>
-<option>Concluído</option>
-</select>
-<textarea id="notes" placeholder="Observações"></textarea>
-<button onclick="saveContact()">Salvar cliente</button>
-<button class="secondary" onclick="clearForm()">Limpar formulário</button>
-<p id="formMessage" class="message"></p>
-</div>
-
-<div class="card">
-<h2>Lista de clientes</h2>
-<input id="search" placeholder="Buscar por nome ou telefone..." oninput="renderContacts()">
-<div id="contacts"></div>
-<button class="secondary" onclick="exportContacts()">Exportar contatos CSV</button>
-</div>
+ <div class="card">
+  <h2>Histórico de vendas</h2>
+  <div class="field">
+   <input id="saleSearch" placeholder="Pesquisar venda, cliente ou consultor..." oninput="renderSales()">
+  </div>
+  <div class="actions">
+   <button class="btn secondary" onclick="exportSales()">Exportar vendas CSV</button>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Status</th><th>Consultor</th><th>Comissão</th><th>Ações</th></tr></thead>
+    <tbody id="salesTable"><tr><td colspan="7">Carregando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
 </section>
 
-<section id="salesSection" class="hidden">
-<div class="card">
-<h2 id="saleFormTitle">Cadastrar venda ou pedido</h2>
-<input id="saleId" type="hidden">
-<input id="customerName" list="customerOptions" placeholder="Nome do cliente *">
-<datalist id="customerOptions"></datalist>
-<input id="product" placeholder="Produto ou serviço *">
-<div class="row">
-<input id="amount" type="number" min="0" step="0.01" placeholder="Valor da venda (R$)">
-<select id="saleStatus">
-<option>Pendente</option>
-<option>Pago</option>
-<option>Cancelado</option>
-</select>
-</div>
-<textarea id="saleNotes" placeholder="Observações do pedido"></textarea>
-<button onclick="saveSale()">Salvar venda</button>
-<button class="secondary" onclick="clearSaleForm()">Limpar formulário</button>
-<p id="saleMessage" class="message"></p>
-</div>
+<!-- FINANCEIRO -->
+<section id="finance" class="panel">
+ <div class="card">
+  <h2>Painel financeiro</h2>
+  <div class="field" style="max-width:260px">
+   <label for="financeMonth">Mês de referência</label>
+   <input id="financeMonth" type="month" onchange="loadFinance()">
+  </div>
+ </div>
 
-<div class="card">
-<h2>Resumo das vendas</h2>
-<div class="stats">
-<div class="stat"><small>Vendas pagas</small><strong id="paidTotal">0</strong></div>
-<div class="stat"><small>Pendentes</small><strong id="pendingTotal">0</strong></div>
-<div class="stat"><small>Canceladas</small><strong id="cancelledTotal">0</strong></div>
-</div>
-</div>
+ <div class="metrics">
+  <div class="metric"><small>Faturamento recebido</small><strong id="finRevenue">R$ 0,00</strong></div>
+  <div class="metric"><small>Despesas</small><strong id="finExpenses">R$ 0,00</strong></div>
+  <div class="metric"><small>Comissões</small><strong id="finCommissions">R$ 0,00</strong></div>
+  <div class="metric"><small>Lucro estimado</small><strong id="finProfit">R$ 0,00</strong></div>
+ </div>
+ <div class="metrics">
+  <div class="metric"><small>Vendas pendentes</small><strong id="finPending">R$ 0,00</strong></div>
+  <div class="metric"><small>Vendas pagas</small><strong id="finPaidCount">0</strong></div>
+ </div>
 
-<div class="card">
-<h2>Histórico de vendas</h2>
-<input id="saleSearch" placeholder="Buscar por cliente ou produto..." oninput="renderSales()">
-<div id="salesList"></div>
-<button class="secondary" onclick="exportSales()">Exportar vendas CSV</button>
-</div>
-</section>
+ <div class="card">
+  <h2>Meta mensal de vendas</h2>
+  <form onsubmit="saveGoal(event)">
+   <div class="field">
+    <label for="goalAmount">Meta de faturamento (R$)</label>
+    <input id="goalAmount" type="number" min="0" step="0.01" placeholder="Ex.: 10000">
+   </div>
+   <button class="btn" type="submit">Salvar meta</button>
+   <div id="goalMessage" class="message"></div>
+  </form>
+  <p class="muted" id="goalProgressText">Defina uma meta para acompanhar seu progresso.</p>
+  <div class="progress"><div id="goalProgressBar"></div></div>
+ </div>
+
+ <div class="card">
+  <h2 id="expenseFormTitle">Cadastrar despesa</h2>
+  <form onsubmit="saveExpense(event)">
+   <input type="hidden" id="expenseId">
+   <div class="grid">
+    <div class="field">
+     <label for="expenseDescription">Descrição *</label>
+     <input id="expenseDescription" required placeholder="Ex.: Internet, aluguel, material">
+    </div>
+    <div class="field">
+     <label for="expenseAmount">Valor (R$) *</label>
+     <input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="0,00">
+    </div>
+    <div class="field">
+     <label for="expenseCategory">Categoria</label>
+     <input id="expenseCategory" placeholder="Ex.: Operacional, Marketing">
+    </div>
+    <div class="field">
+     <label for="expenseDate">Data da despesa *</label>
+     <input id="expenseDate" type="date" required>
+    </div>
+   </div>
+   <div class="field">
+    <label for="expenseNotes">Observações</label>
+    <textarea id="expenseNotes" placeholder="Detalhes da despesa"></textarea>
+   </div>
+   <div class="actions">
+    <button class="btn" type="submit">Salvar despesa</button>
+    <button class="btn secondary" type="button" onclick="clearExpenseForm()">Limpar</button>
+   </div>
+   <div id="expenseMessage" class="message"></div>
+  </form>
+ </div>
+
+ <div class="card">
+  <h2>Histórico de despesas</h2>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th><th>Ações</th></tr></thead>
+    <tbody id="expensesTable"><tr><td colspan="5">Carregando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2 id="consultantFormTitle">Cadastrar consultor</h2>
+  <form onsubmit="saveConsultant(event)">
+   <input type="hidden" id="consultantId">
+   <div class="grid">
+    <div class="field">
+     <label for="consultantName">Nome do consultor *</label>
+     <input id="consultantName" required placeholder="Nome completo">
+    </div>
+    <div class="field">
+     <label for="consultantRate">Comissão padrão (%)</label>
+     <input id="consultantRate" type="number" min="0" max="100" step="0.01" value="0">
+    </div>
+   </div>
+   <div class="actions">
+    <button class="btn" type="submit">Salvar consultor</button>
+    <button class="btn secondary" type="button" onclick="clearConsultantForm()">Limpar</button>
+   </div>
+   <div id="consultantMessage" class="message"></div>
+  </form>
+ </div>
+
+ <div class="card">
+  <h2>Consultores cadastrados</h2>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Nome</th><th>Comissão padrão</th><th>Ações</th></tr></thead>
+    <tbody id="consultantsTable"><tr><td colspan="3">Carregando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
 </section>
 </main>
+</div>
+
+<footer>Central de Vendas</footer>
 
 <script>
-let contacts=[];
-let sales=[];
-let sessionToken=null;
+let sessionToken = null;
+let contacts = [];
+let sales = [];
+let expenses = [];
+let consultants = [];
+let editingContactId = null;
+let editingSaleId = null;
+let editingExpenseId = null;
+let editingConsultantId = null;
 
-async function api(url,options={}){
-  const headers={"Content-Type":"application/json",...(options.headers||{})};
-  if(sessionToken) headers.Authorization="Bearer "+sessionToken;
-  const response=await fetch(url,{...options,headers});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok) throw new Error(data.error||"Ocorreu um erro.");
-  return data;
+const $ = id => document.getElementById(id);
+const money = value => Number(value || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const localDate = () => {
+ const d = new Date();
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+const currentMonth = () => localDate().slice(0,7);
+
+function showMessage(id,message,type="good"){
+ const el=$(id);
+ el.textContent=message;
+ el.className="message "+type;
 }
 
-function money(value){
-  return Number(value||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+async function api(url,options={}){
+ const headers={...(options.headers||{})};
+ if(!(options.body instanceof FormData)) headers["Content-Type"]="application/json";
+ if(sessionToken) headers.Authorization="Bearer "+sessionToken;
+ const response=await fetch(url,{...options,headers});
+ const raw=await response.text();
+ let data={};
+ try{data=raw?JSON.parse(raw):{};}catch{data={message:raw};}
+ if(!response.ok) throw new Error(data.error||data.message||"Erro na comunicação com o servidor.");
+ return data;
 }
 
 async function login(){
-  const message=document.getElementById("loginMessage");
-  message.textContent="Entrando...";
-  try{
-    const result=await api("/api/login",{
-      method:"POST",
-      body:JSON.stringify({
-        username:document.getElementById("username").value,
-        password:document.getElementById("password").value
-      })
-    });
-    sessionToken=result.token;
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("panel").classList.remove("hidden");
-    await Promise.all([loadContacts(),loadSales()]);
-  }catch(error){message.textContent=error.message;}
+ const username=$("username").value.trim();
+ const password=$("password").value;
+ showMessage("loginMessage","Entrando...","");
+ try{
+  const result=await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});
+  if(!result.token) throw new Error("O servidor não retornou o token de acesso.");
+  sessionToken=result.token;
+  $("loginScreen").classList.add("hidden");
+  $("appScreen").classList.remove("hidden");
+  $("password").value="";
+  await loadAll();
+ }catch(error){
+  showMessage("loginMessage",error.message,"bad");
+ }
 }
 
 async function logout(){
-  try{await api("/api/logout",{method:"POST"});}catch(e){}
-  sessionToken=null;
-  contacts=[];
-  sales=[];
-  document.getElementById("panel").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
-  document.getElementById("password").value="";
-  document.getElementById("loginMessage").textContent="";
+ try{await api("/api/logout",{method:"POST"});}catch{}
+ sessionToken=null;
+ $("appScreen").classList.add("hidden");
+ $("loginScreen").classList.remove("hidden");
 }
 
-function showSection(section){
-  const clients=section==="clients";
-  document.getElementById("clientsSection").classList.toggle("hidden",!clients);
-  document.getElementById("salesSection").classList.toggle("hidden",clients);
-  document.getElementById("clientsTab").classList.toggle("active",clients);
-  document.getElementById("salesTab").classList.toggle("active",!clients);
-  if(!clients) loadSales();
+function showTab(tab,button){
+ document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+ $(tab).classList.add("active");
+ document.querySelectorAll("nav button[data-tab]").forEach(b=>b.classList.remove("active"));
+ if(button) button.classList.add("active");
 }
 
-// CLIENTES
+async function loadAll(){
+ try{
+  await Promise.all([loadContacts(),loadSales(),loadConsultants(),loadExpenses()]);
+  await loadFinance();
+ }catch(error){
+  alert("Não foi possível carregar os dados: "+error.message);
+ }
+}
+
+/* CLIENTES */
 async function loadContacts(){
-  try{
-    contacts=await api("/api/contacts");
-    renderContacts();
-    updateCustomerOptions();
-  }catch(error){
-    document.getElementById("contacts").textContent=error.message;
-  }
+ contacts=await api("/api/contacts");
+ if(!Array.isArray(contacts)) contacts=[];
+ renderContacts();
+ updateCustomerOptions();
 }
 
 function renderContacts(){
-  const term=document.getElementById("search").value.toLowerCase();
-  const filtered=contacts.filter(c=>
-    (c.name||"").toLowerCase().includes(term)||
-    (c.phone||"").toLowerCase().includes(term)
-  );
-  document.getElementById("total").textContent=contacts.length;
-  const list=document.getElementById("contacts");
-  list.innerHTML="";
-  if(!filtered.length){list.textContent="Nenhum cliente encontrado.";return;}
-
-  filtered.forEach(c=>{
-    const item=document.createElement("div");
-    item.className="contact";
-    const title=document.createElement("h3");
-    title.textContent=c.name;
-    const details=document.createElement("p");
-    details.textContent=[c.phone,c.email,c.status,c.notes].filter(Boolean).join(" • ");
-    const actions=document.createElement("div");
-    actions.className="actions";
-    const edit=document.createElement("button");
-    edit.className="secondary";
-    edit.textContent="Editar";
-    edit.onclick=()=>editContact(c);
-    const remove=document.createElement("button");
-    remove.className="danger";
-    remove.textContent="Excluir";
-    remove.onclick=()=>deleteContact(c.id);
-    actions.append(edit,remove);
-    item.append(title,details,actions);
-    list.append(item);
-  });
+ const q=$("contactSearch").value.toLowerCase();
+ const filtered=contacts.filter(c=>[c.name,c.phone,c.email,c.notes].join(" ").toLowerCase().includes(q));
+ $("contactsTable").innerHTML=filtered.length?filtered.map(c=>`
+ <tr>
+  <td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email)}</td><td>${esc(c.notes)}</td>
+  <td>
+   <button class="btn secondary small" onclick="editContact(${Number(c.id)})">Editar</button>
+   <button class="btn danger small" onclick="deleteContact(${Number(c.id)})">Excluir</button>
+  </td>
+ </tr>`).join(""):'<tr><td colspan="5">Nenhum cliente encontrado.</td></tr>';
 }
 
 function updateCustomerOptions(){
-  const options=document.getElementById("customerOptions");
-  options.innerHTML="";
-  contacts.forEach(c=>{
-    const option=document.createElement("option");
-    option.value=c.name;
-    options.append(option);
+ $("customerOptions").innerHTML=contacts.map(c=>`<option value="${esc(c.name)}"></option>`).join("");
+}
+
+async function saveContact(event){
+ event.preventDefault();
+ const id=$("contactId").value;
+ const payload={
+  name:$("contactName").value.trim(),
+  phone:$("contactPhone").value.trim(),
+  email:$("contactEmail").value.trim(),
+  notes:$("contactNotes").value.trim()
+ };
+ try{
+  await api(id?"/api/contacts/"+id:"/api/contacts",{
+   method:id?"PUT":"POST",body:JSON.stringify(payload)
   });
+  clearContactForm();
+  showMessage("contactMessage","Cliente salvo com sucesso!");
+  await loadContacts();
+ }catch(error){showMessage("contactMessage",error.message,"bad");}
 }
 
-async function saveContact(){
-  const id=document.getElementById("contactId").value;
-  const message=document.getElementById("formMessage");
-  const data={
-    name:document.getElementById("name").value,
-    phone:document.getElementById("phone").value,
-    email:document.getElementById("email").value,
-    status:document.getElementById("status").value,
-    notes:document.getElementById("notes").value
-  };
-  if(!data.name.trim()){message.textContent="Digite o nome do cliente.";return;}
-  try{
-    await api(id?"/api/contacts/"+id:"/api/contacts",{
-      method:id?"PUT":"POST",
-      body:JSON.stringify(data)
-    });
-    clearForm();
-    message.textContent="Cliente salvo com sucesso!";
-    await loadContacts();
-  }catch(error){message.textContent=error.message;}
+function editContact(id){
+ const c=contacts.find(x=>Number(x.id)===Number(id));
+ if(!c)return;
+ $("contactId").value=c.id;
+ $("contactName").value=c.name||"";
+ $("contactPhone").value=c.phone||"";
+ $("contactEmail").value=c.email||"";
+ $("contactNotes").value=c.notes||"";
+ $("formTitle").textContent="Editar cliente";
+ window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function editContact(c){
-  document.getElementById("contactId").value=c.id;
-  document.getElementById("name").value=c.name||"";
-  document.getElementById("phone").value=c.phone||"";
-  document.getElementById("email").value=c.email||"";
-  document.getElementById("status").value=c.status||"Novo";
-  document.getElementById("notes").value=c.notes||"";
-  document.getElementById("formTitle").textContent="Editar cliente";
-  document.getElementById("formMessage").textContent="";
-  window.scrollTo({top:0,behavior:"smooth"});
+function clearContactForm(){
+ $("contactForm").reset();
+ $("contactId").value="";
+ $("formTitle").textContent="Cadastrar cliente";
 }
 
 async function deleteContact(id){
-  if(!confirm("Deseja realmente excluir este cliente?"))return;
-  try{await api("/api/contacts/"+id,{method:"DELETE"});await loadContacts();}
-  catch(error){alert(error.message);}
-}
-
-function clearForm(){
-  ["contactId","name","phone","email","notes"].forEach(id=>{
-    document.getElementById(id).value="";
-  });
-  document.getElementById("status").value="Novo";
-  document.getElementById("formTitle").textContent="Adicionar cliente";
+ if(!confirm("Deseja excluir este cliente?"))return;
+ try{await api("/api/contacts/"+id,{method:"DELETE"});await loadContacts();}
+ catch(error){alert(error.message);}
 }
 
 async function exportContacts(){
-  await downloadCSV("/api/contacts/export","contatos.csv");
+ try{
+  const response=await fetch("/api/contacts/export",{headers:{Authorization:"Bearer "+sessionToken}});
+  if(!response.ok)throw new Error("Não foi possível exportar os clientes.");
+  downloadBlob(await response.blob(),"clientes.csv");
+ }catch(error){alert(error.message);}
 }
 
-// VENDAS
+/* VENDAS */
 async function loadSales(){
-  try{sales=await api("/api/sales");renderSales();}
-  catch(error){document.getElementById("salesList").textContent=error.message;}
+ sales=await api("/api/sales");
+ if(!Array.isArray(sales))sales=[];
+ renderSales();
+ updateSalesMetrics();
 }
 
 function renderSales(){
-  const term=document.getElementById("saleSearch").value.toLowerCase();
-  const filtered=sales.filter(s=>
-    (s.customer_name||"").toLowerCase().includes(term)||
-    (s.product||"").toLowerCase().includes(term)
-  );
-  const paid=sales.filter(s=>s.status==="Pago");
-  const pending=sales.filter(s=>s.status==="Pendente");
-  const cancelled=sales.filter(s=>s.status==="Cancelado");
-  const revenue=paid.reduce((sum,s)=>sum+Number(s.amount||0),0);
-  document.getElementById("salesTotal").textContent=sales.length;
-  document.getElementById("revenue").textContent=money(revenue);
-  document.getElementById("paidTotal").textContent=paid.length;
-  document.getElementById("pendingTotal").textContent=pending.length;
-  document.getElementById("cancelledTotal").textContent=cancelled.length;
+ const q=$("saleSearch").value.toLowerCase();
+ const filtered=sales.filter(s=>[s.customer_name,s.product,s.status,s.consultant_name,s.notes].join(" ").toLowerCase().includes(q));
+ $("salesTable").innerHTML=filtered.length?filtered.map(s=>`
+ <tr>
+  <td>${esc(s.customer_name)}</td>
+  <td>${esc(s.product)}</td>
+  <td>${money(s.amount)}</td>
+  <td><span class="tag ${s.status==="Pago"?"paid":s.status==="Cancelado"?"cancelled":"pending"}">${esc(s.status)}</span></td>
+  <td>${esc(s.consultant_name||"-")}</td>
+  <td>${Number(s.commission_rate||0).toLocaleString("pt-BR")}%</td>
+  <td>
+   <button class="btn secondary small" onclick="editSale(${Number(s.id)})">Editar</button>
+   <button class="btn danger small" onclick="deleteSale(${Number(s.id)})">Excluir</button>
+  </td>
+ </tr>`).join(""):'<tr><td colspan="7">Nenhuma venda encontrada.</td></tr>';
+}
 
-  const list=document.getElementById("salesList");
-  list.innerHTML="";
-  if(!filtered.length){list.textContent="Nenhuma venda encontrada.";return;}
+function updateSalesMetrics(){
+ $("salesCount").textContent=sales.length;
+ $("paidCount").textContent=sales.filter(s=>s.status==="Pago").length;
+ $("pendingCount").textContent=sales.filter(s=>s.status==="Pendente").length;
+ $("salesRevenue").textContent=money(sales.filter(s=>s.status==="Pago").reduce((sum,s)=>sum+Number(s.amount||0),0));
+}
 
-  filtered.forEach(s=>{
-    const item=document.createElement("div");
-    item.className="contact";
-    const title=document.createElement("h3");
-    title.textContent=s.customer_name;
-    const product=document.createElement("p");
-    product.textContent="Produto/serviço: "+s.product;
-    const value=document.createElement("p");
-    value.className="money";
-    value.textContent=money(s.amount);
-    const status=document.createElement("span");
-    status.className="status";
-    status.textContent=s.status;
-    const notes=document.createElement("p");
-    notes.className="muted";
-    notes.textContent=s.notes||"";
-    const date=document.createElement("p");
-    date.className="muted";
-    date.textContent=s.created_at?"Data: "+new Date(s.created_at).toLocaleString("pt-BR"):"";
-    const actions=document.createElement("div");
-    actions.className="actions";
-    const edit=document.createElement("button");
-    edit.className="secondary";
-    edit.textContent="Editar";
-    edit.onclick=()=>editSale(s);
-    const remove=document.createElement("button");
-    remove.className="danger";
-    remove.textContent="Excluir";
-    remove.onclick=()=>deleteSale(s.id);
-    actions.append(edit,remove);
-    item.append(title,product,value,status,notes,date,actions);
-    list.append(item);
+function updateSaleCommission(){
+ const name=$("saleConsultant").value;
+ const c=consultants.find(x=>x.name===name);
+ if(c)$("saleCommission").value=Number(c.commission_rate||0);
+}
+
+async function saveSale(event){
+ event.preventDefault();
+ const id=$("saleId").value;
+ const payload={
+  customer_name:$("saleCustomer").value.trim(),
+  product:$("saleProduct").value.trim(),
+  amount:Number($("saleAmount").value),
+  status:$("saleStatus").value,
+  notes:$("saleNotes").value.trim(),
+  consultant_name:$("saleConsultant").value,
+  commission_rate:Number($("saleCommission").value||0)
+ };
+ try{
+  await api(id?"/api/sales/"+id:"/api/sales",{
+   method:id?"PUT":"POST",body:JSON.stringify(payload)
   });
+  clearSaleForm();
+  showMessage("saleMessage","Venda salva com sucesso!");
+  await loadSales();
+  await loadFinance();
+ }catch(error){showMessage("saleMessage",error.message,"bad");}
 }
 
-async function saveSale(){
-  const id=document.getElementById("saleId").value;
-  const message=document.getElementById("saleMessage");
-  const data={
-    customer_name:document.getElementById("customerName").value,
-    product:document.getElementById("product").value,
-    amount:document.getElementById("amount").value,
-    status:document.getElementById("saleStatus").value,
-    notes:document.getElementById("saleNotes").value
-  };
-  if(!data.customer_name.trim()){message.textContent="Informe o nome do cliente.";return;}
-  if(!data.product.trim()){message.textContent="Informe o produto ou serviço.";return;}
-  if(data.amount===""||!Number.isFinite(Number(data.amount))||Number(data.amount)<0){
-    message.textContent="Informe um valor válido.";return;
-  }
-  try{
-    await api(id?"/api/sales/"+id:"/api/sales",{
-      method:id?"PUT":"POST",
-      body:JSON.stringify(data)
-    });
-    clearSaleForm();
-    message.textContent="Venda salva com sucesso!";
-    await loadSales();
-  }catch(error){message.textContent=error.message;}
-}
-
-function editSale(s){
-  document.getElementById("saleId").value=s.id;
-  document.getElementById("customerName").value=s.customer_name||"";
-  document.getElementById("product").value=s.product||"";
-  document.getElementById("amount").value=s.amount||0;
-  document.getElementById("saleStatus").value=s.status||"Pendente";
-  document.getElementById("saleNotes").value=s.notes||"";
-  document.getElementById("saleFormTitle").textContent="Editar venda";
-  document.getElementById("saleMessage").textContent="";
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-async function deleteSale(id){
-  if(!confirm("Deseja realmente excluir esta venda?"))return;
-  try{await api("/api/sales/"+id,{method:"DELETE"});await loadSales();}
-  catch(error){alert(error.message);}
+function editSale(id){
+ const s=sales.find(x=>Number(x.id)===Number(id));
+ if(!s)return;
+ $("saleId").value=s.id;
+ $("saleCustomer").value=s.customer_name||"";
+ $("saleProduct").value=s.product||"";
+ $("saleAmount").value=s.amount||0;
+ $("saleStatus").value=s.status||"Pendente";
+ $("saleNotes").value=s.notes||"";
+ $("saleConsultant").value=s.consultant_name||"";
+ $("saleCommission").value=Number(s.commission_rate||0);
+ $("saleFormTitle").textContent="Editar venda";
+ window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function clearSaleForm(){
-  ["saleId","customerName","product","amount","saleNotes"].forEach(id=>{
-    document.getElementById(id).value="";
-  });
-  document.getElementById("saleStatus").value="Pendente";
-  document.getElementById("saleFormTitle").textContent="Cadastrar venda ou pedido";
+ $("saleForm").reset();
+ $("saleId").value="";
+ $("saleCommission").value=0;
+ $("saleFormTitle").textContent="Cadastrar venda ou pedido";
+}
+
+async function deleteSale(id){
+ if(!confirm("Deseja excluir esta venda?"))return;
+ try{await api("/api/sales/"+id,{method:"DELETE"});await loadSales();await loadFinance();}
+ catch(error){alert(error.message);}
 }
 
 async function exportSales(){
-  await downloadCSV("/api/sales/export","vendas.csv");
+ try{
+  const response=await fetch("/api/sales/export",{headers:{Authorization:"Bearer "+sessionToken}});
+  if(!response.ok)throw new Error("Não foi possível exportar as vendas.");
+  downloadBlob(await response.blob(),"vendas.csv");
+ }catch(error){alert(error.message);}
 }
 
-async function downloadCSV(endpoint,filename){
-  try{
-    const response=await fetch(endpoint,{
-      headers:{Authorization:"Bearer "+sessionToken}
-    });
-    if(!response.ok){
-      const data=await response.json().catch(()=>({}));
-      throw new Error(data.error||"Erro ao exportar.");
-    }
-    const blob=await response.blob();
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement("a");
-    link.href=url;
-    link.download=filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }catch(error){alert(error.message);}
+/* CONSULTORES */
+async function loadConsultants(){
+ consultants=await api("/api/consultants");
+ if(!Array.isArray(consultants))consultants=[];
+ renderConsultants();
+ updateConsultantOptions();
 }
+
+function renderConsultants(){
+ $("consultantsTable").innerHTML=consultants.length?consultants.map(c=>`
+ <tr>
+  <td>${esc(c.name)}</td>
+  <td>${Number(c.commission_rate||0).toLocaleString("pt-BR")}%</td>
+  <td>
+   <button class="btn secondary small" onclick="editConsultant(${Number(c.id)})">Editar</button>
+   <button class="btn danger small" onclick="deleteConsultant(${Number(c.id)})">Excluir</button>
+  </td>
+ </tr>`).join(""):'<tr><td colspan="3">Nenhum consultor cadastrado.</td></tr>';
+}
+
+function updateConsultantOptions(){
+ const selected=$("saleConsultant").value;
+ $("saleConsultant").innerHTML='<option value="">Sem consultor</option>'+
+  consultants.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+ if(consultants.some(c=>c.name===selected))$("saleConsultant").value=selected;
+}
+
+async function saveConsultant(event){
+ event.preventDefault();
+ const id=$("consultantId").value;
+ const payload={
+  name:$("consultantName").value.trim(),
+  commission_rate:Number($("consultantRate").value||0)
+ };
+ try{
+  await api(id?"/api/consultants/"+id:"/api/consultants",{
+   method:id?"PUT":"POST",body:JSON.stringify(payload)
+  });
+  clearConsultantForm();
+  showMessage("consultantMessage","Consultor salvo com sucesso!");
+  await loadConsultants();
+ }catch(error){showMessage("consultantMessage",error.message,"bad");}
+}
+
+function editConsultant(id){
+ const c=consultants.find(x=>Number(x.id)===Number(id));
+ if(!c)return;
+ $("consultantId").value=c.id;
+ $("consultantName").value=c.name||"";
+ $("consultantRate").value=Number(c.commission_rate||0);
+ $("consultantFormTitle").textContent="Editar consultor";
+}
+
+function clearConsultantForm(){
+ $("consultantFormTitle").textContent="Cadastrar consultor";
+ $("consultantId").value="";
+ $("consultantName").value="";
+ $("consultantRate").value=0;
+}
+
+async function deleteConsultant(id){
+ if(!confirm("Deseja excluir este consultor?"))return;
+ try{await api("/api/consultants/"+id,{method:"DELETE"});await loadConsultants();}
+ catch(error){alert(error.message);}
+}
+
+/* DESPESAS */
+async function loadExpenses(){
+ expenses=await api("/api/expenses");
+ if(!Array.isArray(expenses))expenses=[];
+ renderExpenses();
+}
+
+function renderExpenses(){
+ $("expensesTable").innerHTML=expenses.length?expenses.map(e=>`
+ <tr>
+  <td>${esc(e.description)}</td>
+  <td>${esc(e.category||"-")}</td>
+  <td>${esc(String(e.expense_date||"").slice(0,10))}</td>
+  <td>${money(e.amount)}</td>
+  <td>
+   <button class="btn secondary small" onclick="editExpense(${Number(e.id)})">Editar</button>
+   <button class="btn danger small" onclick="deleteExpense(${Number(e.id)})">Excluir</button>
+  </td>
+ </tr>`).join(""):'<tr><td colspan="5">Nenhuma despesa cadastrada.</td></tr>';
+}
+
+async function saveExpense(event){
+ event.preventDefault();
+ const id=$("expenseId").value;
+ const payload={
+  description:$("expenseDescription").value.trim(),
+  amount:Number($("expenseAmount").value),
+  category:$("expenseCategory").value.trim(),
+  expense_date:$("expenseDate").value,
+  notes:$("expenseNotes").value.trim()
+ };
+ try{
+  await api(id?"/api/expenses/"+id:"/api/expenses",{
+   method:id?"PUT":"POST",body:JSON.stringify(payload)
+  });
+  clearExpenseForm();
+  showMessage("expenseMessage","Despesa salva com sucesso!");
+  await loadExpenses();
+  await loadFinance();
+ }catch(error){showMessage("expenseMessage",error.message,"bad");}
+}
+
+function editExpense(id){
+ const e=expenses.find(x=>Number(x.id)===Number(id));
+ if(!e)return;
+ $("expenseId").value=e.id;
+ $("expenseDescription").value=e.description||"";
+ $("expenseAmount").value=e.amount||0;
+ $("expenseCategory").value=e.category||"";
+ $("expenseDate").value=String(e.expense_date||"").slice(0,10);
+ $("expenseNotes").value=e.notes||"";
+ $("expenseFormTitle").textContent="Editar despesa";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function clearExpenseForm(){
+ $("expenseId").value="";
+ $("expenseDescription").value="";
+ $("expenseAmount").value="";
+ $("expenseCategory").value="";
+ $("expenseDate").value=localDate();
+ $("expenseNotes").value="";
+ $("expenseFormTitle").textContent="Cadastrar despesa";
+}
+
+async function deleteExpense(id){
+ if(!confirm("Deseja excluir esta despesa?"))return;
+ try{await api("/api/expenses/"+id,{method:"DELETE"});await loadExpenses();await loadFinance();}
+ catch(error){alert(error.message);}
+}
+
+/* METAS E RESUMO FINANCEIRO */
+async function loadFinance(){
+ const month=$("financeMonth").value||currentMonth();
+ try{
+  const data=await api("/api/finance/summary?month="+encodeURIComponent(month));
+  $("finRevenue").textContent=money(data.revenue);
+  $("finExpenses").textContent=money(data.expenses);
+  $("finCommissions").textContent=money(data.commissions);
+  $("finProfit").textContent=money(data.profit);
+  $("finPending").textContent=money(data.pending);
+  $("finPaidCount").textContent=data.paid_count??0;
+  $("goalAmount").value=data.target??"";
+  const target=Number(data.target||0);
+  const revenue=Number(data.revenue||0);
+  const progress=target>0?Math.min(100,(revenue/target)*100):0;
+  $("goalProgressBar").style.width=progress+"%";
+  $("goalProgressText").textContent=target>0?
+   `${money(revenue)} de ${money(target)} alcançados — ${progress.toFixed(1).replace(".",",")}% da meta.`:
+   "Defina uma meta para acompanhar seu progresso.";
+ }catch(error){
+  showMessage("goalMessage","Erro ao carregar o financeiro: "+error.message,"bad");
+ }
+}
+
+async function saveGoal(event){
+ event.preventDefault();
+ const payload={
+  month:$("financeMonth").value||currentMonth(),
+  target_amount:Number($("goalAmount").value||0)
+ };
+ try{
+  await api("/api/goals",{method:"PUT",body:JSON.stringify(payload)});
+  showMessage("goalMessage","Meta salva com sucesso!");
+  await loadFinance();
+ }catch(error){showMessage("goalMessage",error.message,"bad");}
+}
+
+function downloadBlob(blob,filename){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download=filename;
+ document.body.appendChild(a);a.click();a.remove();
+ URL.revokeObjectURL(url);
+}
+
+$("password").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
+$("financeMonth").value=currentMonth();
+$("expenseDate").value=localDate();
 </script>
 </body>
 </html>
