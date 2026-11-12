@@ -55,8 +55,6 @@ th{color:#64748b;background:#f8fafc}
 .login-wrap .card{padding:24px}
 .login-wrap h2{font-size:22px}
 footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
-
-/* PAINEL DE DESEMPENHO */
 .dashboard-chart{display:flex;align-items:flex-end;gap:10px;height:190px;padding:15px 5px 0;border-bottom:1px solid #e2e8f0}
 .dashboard-month{flex:1;min-width:0;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}
 .dashboard-bar{width:min(100%,38px);min-height:3px;background:#2563eb;border-radius:6px 6px 0 0}
@@ -71,7 +69,14 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 .dashboard-status .paid{background:#dcfce7;color:#166534}
 .dashboard-status .pending{background:#fef3c7;color:#92400e}
 .dashboard-status .cancelled{background:#fee2e2;color:#991b1b}
-
+.consultant-goal-card{border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin:12px 0}
+.consultant-goal-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.consultant-goal-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.consultant-goal-stats div{background:#f8fafc;padding:9px;border-radius:8px}
+.consultant-goal-stats small{display:block;color:#64748b;font-size:11px;margin-bottom:5px}
+.consultant-goal-stats strong{font-size:14px;overflow-wrap:anywhere}
+.goal-edit{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.goal-edit .field{flex:1;min-width:150px;margin:0}
 @media(max-width:760px){
  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
  .grid{grid-template-columns:1fr}
@@ -83,6 +88,7 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 @media(max-width:500px){
  .dashboard-chart{gap:4px}
  .dashboard-value{font-size:9px}
+ .consultant-goal-stats{grid-template-columns:1fr 1fr}
 }
 @media(max-width:380px){
  .metrics{grid-template-columns:1fr 1fr}
@@ -124,7 +130,7 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 
 <main>
 
-<!-- PAINEL DE DESEMPENHO -->
+<!-- PAINEL -->
 <section id="dashboard" class="panel active">
  <div class="card">
   <h2>Painel de desempenho</h2>
@@ -132,22 +138,10 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
  </div>
 
  <div class="metrics">
-  <div class="metric">
-   <small>Faturamento recebido</small>
-   <strong id="dashRevenue">R$ 0,00</strong>
-  </div>
-  <div class="metric">
-   <small>Vendas registradas</small>
-   <strong id="dashSales">0</strong>
-  </div>
-  <div class="metric">
-   <small>Ticket médio pago</small>
-   <strong id="dashAverage">R$ 0,00</strong>
-  </div>
-  <div class="metric">
-   <small>Lucro estimado do mês</small>
-   <strong id="dashProfit">R$ 0,00</strong>
-  </div>
+  <div class="metric"><small>Faturamento recebido</small><strong id="dashRevenue">R$ 0,00</strong></div>
+  <div class="metric"><small>Vendas registradas</small><strong id="dashSales">0</strong></div>
+  <div class="metric"><small>Ticket médio pago</small><strong id="dashAverage">R$ 0,00</strong></div>
+  <div class="metric"><small>Lucro estimado do mês</small><strong id="dashProfit">R$ 0,00</strong></div>
  </div>
 
  <div class="card">
@@ -159,9 +153,7 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
  <div class="card">
   <h2>Ranking de consultores</h2>
   <p class="muted">Classificação pelo valor das vendas pagas.</p>
-  <div id="dashRanking">
-   <p class="muted">Carregando ranking...</p>
-  </div>
+  <div id="dashRanking"><p class="muted">Carregando ranking...</p></div>
  </div>
 
  <div class="card">
@@ -170,11 +162,9 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
  </div>
 
  <div class="card">
-  <h2>Meta do mês</h2>
+  <h2>Meta geral do mês</h2>
   <p id="dashGoalText" class="muted">Carregando meta...</p>
-  <div class="progress">
-   <div id="dashGoalBar"></div>
-  </div>
+  <div class="progress"><div id="dashGoalBar"></div></div>
  </div>
 
  <div class="actions">
@@ -190,22 +180,10 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
   <form id="contactForm" onsubmit="saveContact(event)">
    <input type="hidden" id="contactId">
    <div class="grid">
-    <div class="field">
-     <label for="contactName">Nome do cliente *</label>
-     <input id="contactName" required placeholder="Nome completo">
-    </div>
-    <div class="field">
-     <label for="contactPhone">Telefone / WhatsApp</label>
-     <input id="contactPhone" placeholder="(00) 00000-0000">
-    </div>
-    <div class="field">
-     <label for="contactEmail">E-mail</label>
-     <input id="contactEmail" type="email" placeholder="cliente@email.com">
-    </div>
-    <div class="field">
-     <label for="contactNotes">Observações</label>
-     <input id="contactNotes" placeholder="Informações adicionais">
-    </div>
+    <div class="field"><label for="contactName">Nome do cliente *</label><input id="contactName" required placeholder="Nome completo"></div>
+    <div class="field"><label for="contactPhone">Telefone / WhatsApp</label><input id="contactPhone" placeholder="(00) 00000-0000"></div>
+    <div class="field"><label for="contactEmail">E-mail</label><input id="contactEmail" type="email" placeholder="cliente@email.com"></div>
+    <div class="field"><label for="contactNotes">Observações</label><input id="contactNotes" placeholder="Informações adicionais"></div>
    </div>
    <div class="actions">
     <button class="btn" type="submit">Salvar cliente</button>
@@ -217,12 +195,8 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 
  <div class="card">
   <h2>Clientes cadastrados</h2>
-  <div class="field">
-   <input id="contactSearch" placeholder="Pesquisar cliente..." oninput="renderContacts()">
-  </div>
-  <div class="actions">
-   <button class="btn secondary" onclick="exportContacts()">Exportar clientes CSV</button>
-  </div>
+  <div class="field"><input id="contactSearch" placeholder="Pesquisar cliente..." oninput="renderContacts()"></div>
+  <div class="actions"><button class="btn secondary" onclick="exportContacts()">Exportar clientes CSV</button></div>
   <div class="table-wrap">
    <table>
     <thead><tr><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Observações</th><th>Ações</th></tr></thead>
@@ -251,14 +225,8 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
      <input id="saleCustomer" list="customerOptions" required placeholder="Nome do cliente">
      <datalist id="customerOptions"></datalist>
     </div>
-    <div class="field">
-     <label for="saleProduct">Produto ou serviço *</label>
-     <input id="saleProduct" required placeholder="O que foi vendido?">
-    </div>
-    <div class="field">
-     <label for="saleAmount">Valor (R$) *</label>
-     <input id="saleAmount" type="number" min="0" step="0.01" required placeholder="0,00">
-    </div>
+    <div class="field"><label for="saleProduct">Produto ou serviço *</label><input id="saleProduct" required placeholder="O que foi vendido?"></div>
+    <div class="field"><label for="saleAmount">Valor (R$) *</label><input id="saleAmount" type="number" min="0" step="0.01" required placeholder="0,00"></div>
     <div class="field">
      <label for="saleStatus">Situação</label>
      <select id="saleStatus">
@@ -269,19 +237,11 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
     </div>
     <div class="field">
      <label for="saleConsultant">Consultor responsável</label>
-     <select id="saleConsultant" onchange="updateSaleCommission()">
-      <option value="">Sem consultor</option>
-     </select>
+     <select id="saleConsultant" onchange="updateSaleCommission()"><option value="">Sem consultor</option></select>
     </div>
-    <div class="field">
-     <label for="saleCommission">Comissão (%)</label>
-     <input id="saleCommission" type="number" min="0" max="100" step="0.01" value="0">
-    </div>
+    <div class="field"><label for="saleCommission">Comissão (%)</label><input id="saleCommission" type="number" min="0" max="100" step="0.01" value="0"></div>
    </div>
-   <div class="field">
-    <label for="saleNotes">Observações</label>
-    <textarea id="saleNotes" placeholder="Detalhes da venda"></textarea>
-   </div>
+   <div class="field"><label for="saleNotes">Observações</label><textarea id="saleNotes" placeholder="Detalhes da venda"></textarea></div>
    <div class="actions">
     <button class="btn" type="submit">Salvar venda</button>
     <button class="btn secondary" type="button" onclick="clearSaleForm()">Limpar</button>
@@ -292,12 +252,8 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 
  <div class="card">
   <h2>Histórico de vendas</h2>
-  <div class="field">
-   <input id="saleSearch" placeholder="Pesquisar venda, cliente ou consultor..." oninput="renderSales()">
-  </div>
-  <div class="actions">
-   <button class="btn secondary" onclick="exportSales()">Exportar vendas CSV</button>
-  </div>
+  <div class="field"><input id="saleSearch" placeholder="Pesquisar venda, cliente ou consultor..." oninput="renderSales()"></div>
+  <div class="actions"><button class="btn secondary" onclick="exportSales()">Exportar vendas CSV</button></div>
   <div class="table-wrap">
    <table>
     <thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Status</th><th>Consultor</th><th>Comissão</th><th>Ações</th></tr></thead>
@@ -313,7 +269,7 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
   <h2>Painel financeiro</h2>
   <div class="field" style="max-width:260px">
    <label for="financeMonth">Mês de referência</label>
-   <input id="financeMonth" type="month" onchange="loadFinance()">
+   <input id="financeMonth" type="month" onchange="loadFinance();loadConsultantPerformance()">
   </div>
  </div>
 
@@ -329,17 +285,27 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
  </div>
 
  <div class="card">
-  <h2>Meta mensal de vendas</h2>
+  <h2>Meta mensal geral</h2>
   <form onsubmit="saveGoal(event)">
-   <div class="field">
-    <label for="goalAmount">Meta de faturamento (R$)</label>
-    <input id="goalAmount" type="number" min="0" step="0.01" placeholder="Ex.: 10000">
-   </div>
-   <button class="btn" type="submit">Salvar meta</button>
+   <div class="field"><label for="goalAmount">Meta de faturamento (R$)</label><input id="goalAmount" type="number" min="0" step="0.01" placeholder="Ex.: 10000"></div>
+   <button class="btn" type="submit">Salvar meta geral</button>
    <div id="goalMessage" class="message"></div>
   </form>
   <p class="muted" id="goalProgressText">Defina uma meta para acompanhar seu progresso.</p>
   <div class="progress"><div id="goalProgressBar"></div></div>
+ </div>
+
+ <!-- NOVO: METAS INDIVIDUAIS -->
+ <div class="card">
+  <h2>Metas individuais dos consultores</h2>
+  <p class="muted">Defina uma meta mensal para cada consultor. O sistema calcula automaticamente as vendas pagas, o que falta para alcançar a meta e a comissão acumulada.</p>
+  <div id="consultantGoalsList">
+   <p class="muted">Carregando desempenho dos consultores...</p>
+  </div>
+  <div id="consultantGoalsMessage" class="message"></div>
+  <div class="actions">
+   <button class="btn secondary" type="button" onclick="loadConsultantPerformance()">Atualizar metas individuais</button>
+  </div>
  </div>
 
  <div class="card">
@@ -347,27 +313,12 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
   <form onsubmit="saveExpense(event)">
    <input type="hidden" id="expenseId">
    <div class="grid">
-    <div class="field">
-     <label for="expenseDescription">Descrição *</label>
-     <input id="expenseDescription" required placeholder="Ex.: Internet, aluguel, material">
-    </div>
-    <div class="field">
-     <label for="expenseAmount">Valor (R$) *</label>
-     <input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="0,00">
-    </div>
-    <div class="field">
-     <label for="expenseCategory">Categoria</label>
-     <input id="expenseCategory" placeholder="Ex.: Operacional, Marketing">
-    </div>
-    <div class="field">
-     <label for="expenseDate">Data da despesa *</label>
-     <input id="expenseDate" type="date" required>
-    </div>
+    <div class="field"><label for="expenseDescription">Descrição *</label><input id="expenseDescription" required placeholder="Ex.: Internet, aluguel, material"></div>
+    <div class="field"><label for="expenseAmount">Valor (R$) *</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="0,00"></div>
+    <div class="field"><label for="expenseCategory">Categoria</label><input id="expenseCategory" placeholder="Ex.: Operacional, Marketing"></div>
+    <div class="field"><label for="expenseDate">Data da despesa *</label><input id="expenseDate" type="date" required></div>
    </div>
-   <div class="field">
-    <label for="expenseNotes">Observações</label>
-    <textarea id="expenseNotes" placeholder="Detalhes da despesa"></textarea>
-   </div>
+   <div class="field"><label for="expenseNotes">Observações</label><textarea id="expenseNotes" placeholder="Detalhes da despesa"></textarea></div>
    <div class="actions">
     <button class="btn" type="submit">Salvar despesa</button>
     <button class="btn secondary" type="button" onclick="clearExpenseForm()">Limpar</button>
@@ -391,14 +342,8 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
   <form onsubmit="saveConsultant(event)">
    <input type="hidden" id="consultantId">
    <div class="grid">
-    <div class="field">
-     <label for="consultantName">Nome do consultor *</label>
-     <input id="consultantName" required placeholder="Nome completo">
-    </div>
-    <div class="field">
-     <label for="consultantRate">Comissão padrão (%)</label>
-     <input id="consultantRate" type="number" min="0" max="100" step="0.01" value="0">
-    </div>
+    <div class="field"><label for="consultantName">Nome do consultor *</label><input id="consultantName" required placeholder="Nome completo"></div>
+    <div class="field"><label for="consultantRate">Comissão padrão (%)</label><input id="consultantRate" type="number" min="0" max="100" step="0.01" value="0"></div>
    </div>
    <div class="actions">
     <button class="btn" type="submit">Salvar consultor</button>
@@ -425,24 +370,21 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 <footer>Central de Vendas</footer>
 
 <script>
-let sessionToken = null;
-let contacts = [];
-let sales = [];
-let expenses = [];
-let consultants = [];
-let editingContactId = null;
-let editingSaleId = null;
-let editingExpenseId = null;
-let editingConsultantId = null;
+let sessionToken=null;
+let contacts=[];
+let sales=[];
+let expenses=[];
+let consultants=[];
+let consultantPerformance=[];
 
-const $ = id => document.getElementById(id);
-const money = value => Number(value || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const esc = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const localDate = () => {
- const d = new Date();
+const $=id=>document.getElementById(id);
+const money=value=>Number(value||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const localDate=()=>{
+ const d=new Date();
  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
-const currentMonth = () => localDate().slice(0,7);
+const currentMonth=()=>localDate().slice(0,7);
 
 function showMessage(id,message,type="good"){
  const el=$(id);
@@ -452,13 +394,13 @@ function showMessage(id,message,type="good"){
 
 async function api(url,options={}){
  const headers={...(options.headers||{})};
- if(!(options.body instanceof FormData)) headers["Content-Type"]="application/json";
- if(sessionToken) headers.Authorization="Bearer "+sessionToken;
+ if(!(options.body instanceof FormData))headers["Content-Type"]="application/json";
+ if(sessionToken)headers.Authorization="Bearer "+sessionToken;
  const response=await fetch(url,{...options,headers});
  const raw=await response.text();
  let data={};
  try{data=raw?JSON.parse(raw):{};}catch{data={message:raw};}
- if(!response.ok) throw new Error(data.error||data.message||"Erro na comunicação com o servidor.");
+ if(!response.ok)throw new Error(data.error||data.message||"Erro na comunicação com o servidor.");
  return data;
 }
 
@@ -468,15 +410,13 @@ async function login(){
  showMessage("loginMessage","Entrando...","");
  try{
   const result=await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});
-  if(!result.token) throw new Error("O servidor não retornou o token de acesso.");
+  if(!result.token)throw new Error("O servidor não retornou o token de acesso.");
   sessionToken=result.token;
   $("loginScreen").classList.add("hidden");
   $("appScreen").classList.remove("hidden");
   $("password").value="";
   await loadAll();
- }catch(error){
-  showMessage("loginMessage",error.message,"bad");
- }
+ }catch(error){showMessage("loginMessage",error.message,"bad");}
 }
 
 async function logout(){
@@ -496,11 +436,8 @@ function showTab(tab,button){
 async function loadAll(){
  try{
   await Promise.all([loadContacts(),loadSales(),loadConsultants(),loadExpenses()]);
-  await loadFinance();
-  await loadDashboard();
- }catch(error){
-  alert("Não foi possível carregar os dados: "+error.message);
- }
+  await Promise.all([loadFinance(),loadDashboard(),loadConsultantPerformance()]);
+ }catch(error){alert("Não foi possível carregar os dados: "+error.message);}
 }
 
 /* CLIENTES */
@@ -636,9 +573,7 @@ async function saveSale(event){
   });
   clearSaleForm();
   showMessage("saleMessage","Venda salva com sucesso!");
-  await loadSales();
-  await loadFinance();
-  await loadDashboard();
+  await Promise.all([loadSales(),loadFinance(),loadDashboard(),loadConsultantPerformance()]);
  }catch(error){showMessage("saleMessage",error.message,"bad");}
 }
 
@@ -668,9 +603,7 @@ async function deleteSale(id){
  if(!confirm("Deseja excluir esta venda?"))return;
  try{
   await api("/api/sales/"+id,{method:"DELETE"});
-  await loadSales();
-  await loadFinance();
-  await loadDashboard();
+  await Promise.all([loadSales(),loadFinance(),loadDashboard(),loadConsultantPerformance()]);
  }catch(error){alert(error.message);}
 }
 
@@ -723,6 +656,8 @@ async function saveConsultant(event){
   clearConsultantForm();
   showMessage("consultantMessage","Consultor salvo com sucesso!");
   await loadConsultants();
+  await loadConsultantPerformance();
+  await loadDashboard();
  }catch(error){showMessage("consultantMessage",error.message,"bad");}
 }
 
@@ -743,9 +678,13 @@ function clearConsultantForm(){
 }
 
 async function deleteConsultant(id){
- if(!confirm("Deseja excluir este consultor?"))return;
- try{await api("/api/consultants/"+id,{method:"DELETE"});await loadConsultants();}
- catch(error){alert(error.message);}
+ if(!confirm("Deseja excluir este consultor? As metas individuais dele também serão excluídas. As vendas antigas permanecerão no histórico."))return;
+ try{
+  await api("/api/consultants/"+id,{method:"DELETE"});
+  await loadConsultants();
+  await loadConsultantPerformance();
+  await loadDashboard();
+ }catch(error){alert(error.message);}
 }
 
 /* DESPESAS */
@@ -824,7 +763,7 @@ async function deleteExpense(id){
  }catch(error){alert(error.message);}
 }
 
-/* METAS E RESUMO FINANCEIRO */
+/* FINANCEIRO E META GERAL */
 async function loadFinance(){
  const month=$("financeMonth").value||currentMonth();
  try{
@@ -843,9 +782,7 @@ async function loadFinance(){
   $("goalProgressText").textContent=target>0?
    `${money(revenue)} de ${money(target)} alcançados — ${progress.toFixed(1).replace(".",",")}% da meta.`:
    "Defina uma meta para acompanhar seu progresso.";
- }catch(error){
-  showMessage("goalMessage","Erro ao carregar o financeiro: "+error.message,"bad");
- }
+ }catch(error){showMessage("goalMessage","Erro ao carregar o financeiro: "+error.message,"bad");}
 }
 
 async function saveGoal(event){
@@ -856,10 +793,95 @@ async function saveGoal(event){
  };
  try{
   await api("/api/goals",{method:"PUT",body:JSON.stringify(payload)});
-  showMessage("goalMessage","Meta salva com sucesso!");
+  showMessage("goalMessage","Meta geral salva com sucesso!");
   await loadFinance();
   await loadDashboard();
  }catch(error){showMessage("goalMessage",error.message,"bad");}
+}
+
+/* NOVO: METAS INDIVIDUAIS */
+async function loadConsultantPerformance(){
+ if(!sessionToken)return;
+ const month=$("financeMonth").value||currentMonth();
+ $("consultantGoalsList").innerHTML='<p class="muted">Carregando desempenho...</p>';
+
+ try{
+  consultantPerformance=await api(
+   "/api/consultant-goals/performance?month="+encodeURIComponent(month)
+  );
+  if(!Array.isArray(consultantPerformance))consultantPerformance=[];
+  renderConsultantPerformance();
+ }catch(error){
+  $("consultantGoalsList").innerHTML='<p class="bad">Não foi possível carregar as metas individuais: '+esc(error.message)+'</p>';
+ }
+}
+
+function renderConsultantPerformance(){
+ if(!consultantPerformance.length){
+  $("consultantGoalsList").innerHTML='<p class="muted">Cadastre um consultor para começar a definir metas individuais.</p>';
+  return;
+ }
+
+ $("consultantGoalsList").innerHTML=consultantPerformance.map(c=>{
+  const target=Number(c.target_amount||0);
+  const sold=Number(c.sales_amount||0);
+  const remaining=Number(c.remaining||0);
+  const progress=Number(c.progress||0);
+  const commission=Number(c.commissions||0);
+
+  return `
+   <div class="consultant-goal-card">
+    <div class="consultant-goal-head">
+     <strong>${esc(c.consultant_name)}</strong>
+     <span class="tag ${target>0&&progress>=100?"paid":"pending"}">${target>0?progress.toFixed(1).replace(".",",")+"% da meta":"Meta não definida"}</span>
+    </div>
+
+    <div class="consultant-goal-stats">
+     <div><small>Vendido no mês</small><strong>${money(sold)}</strong></div>
+     <div><small>Falta para a meta</small><strong>${target>0?money(remaining):"—"}</strong></div>
+     <div><small>Comissão acumulada</small><strong>${money(commission)}</strong></div>
+    </div>
+
+    <div class="progress"><div style="width:${progress}%"></div></div>
+    <p class="muted">${Number(c.paid_count||0)} venda(s) paga(s) neste mês. Meta: ${target>0?money(target):"não definida"}.</p>
+
+    <form class="goal-edit" onsubmit="saveConsultantGoal(event,${Number(c.consultant_id)})">
+     <div class="field">
+      <label>Meta mensal deste consultor (R$)</label>
+      <input type="number" min="0" step="0.01" name="target_amount" value="${target}" placeholder="Ex.: 5000" required>
+     </div>
+     <button class="btn" type="submit">Salvar meta</button>
+    </form>
+   </div>
+  `;
+ }).join("");
+}
+
+async function saveConsultantGoal(event,consultantId){
+ event.preventDefault();
+ const input=event.currentTarget.elements.target_amount;
+ const target=Number(input.value);
+ const month=$("financeMonth").value||currentMonth();
+
+ if(!Number.isFinite(target)||target<0){
+  showMessage("consultantGoalsMessage","Informe um valor válido.","bad");
+  return;
+ }
+
+ try{
+  await api("/api/consultant-goals",{
+   method:"PUT",
+   body:JSON.stringify({
+    consultant_id:consultantId,
+    month,
+    target_amount:target
+   })
+  });
+  showMessage("consultantGoalsMessage","Meta individual salva com sucesso!");
+  await loadConsultantPerformance();
+ }catch(error){
+  showMessage("consultantGoalsMessage",error.message,"bad");
+ }
 }
 
 /* PAINEL DE DESEMPENHO */
@@ -882,11 +904,9 @@ function getSaleDate(s){
 
 async function loadDashboard(){
  if(!sessionToken)return;
-
  try{
   const now=new Date();
   const months=[];
-
   for(let i=5;i>=0;i--){
    const date=new Date(now.getFullYear(),now.getMonth()-i,1);
    const key=monthKey(date);
@@ -904,26 +924,21 @@ async function loadDashboard(){
   paid.forEach(s=>{
    const date=getSaleDate(s);
    if(!date)return;
-   const key=monthKey(date);
-   const month=months.find(m=>m.key===key);
+   const month=months.find(m=>m.key===monthKey(date));
    if(month)month.total+=Number(s.amount||0);
   });
 
   const maximum=Math.max(...months.map(m=>m.total),1);
-
   $("dashChart").innerHTML=months.map(m=>{
    const height=m.total>0?Math.max(5,(m.total/maximum)*135):3;
-   return `
-    <div class="dashboard-month">
-     <div class="dashboard-value">${m.total>0?money(m.total):"—"}</div>
-     <div class="dashboard-bar" style="height:${height}px"></div>
-     <small>${esc(m.label)}</small>
-    </div>
-   `;
+   return `<div class="dashboard-month">
+    <div class="dashboard-value">${m.total>0?money(m.total):"—"}</div>
+    <div class="dashboard-bar" style="height:${height}px"></div>
+    <small>${esc(m.label)}</small>
+   </div>`;
   }).join("");
 
   const ranking={};
-
   paid.forEach(s=>{
    const name=(s.consultant_name||"Sem consultor").trim()||"Sem consultor";
    ranking[name]=(ranking[name]||0)+Number(s.amount||0);
@@ -935,15 +950,9 @@ async function loadDashboard(){
   $("dashRanking").innerHTML=ranked.length?
    ranked.map(([name,total],index)=>`
     <div class="dashboard-row">
-     <div class="dashboard-row-top">
-      <strong>${index+1}º ${esc(name)}</strong>
-      <strong>${money(total)}</strong>
-     </div>
-     <div class="dashboard-track">
-      <div class="dashboard-fill" style="width:${(total/highest)*100}%"></div>
-     </div>
-    </div>
-   `).join("")
+     <div class="dashboard-row-top"><strong>${index+1}º ${esc(name)}</strong><strong>${money(total)}</strong></div>
+     <div class="dashboard-track"><div class="dashboard-fill" style="width:${(total/highest)*100}%"></div></div>
+    </div>`).join("")
    :'<p class="muted">Ainda não existem vendas pagas para montar o ranking.</p>';
 
   const paidCount=sales.filter(s=>s.status==="Pago").length;
@@ -956,9 +965,7 @@ async function loadDashboard(){
    <span class="cancelled">Canceladas: ${cancelledCount}</span>
   `;
 
-  const month=currentMonth();
-  const finance=await api("/api/finance/summary?month="+encodeURIComponent(month));
-
+  const finance=await api("/api/finance/summary?month="+encodeURIComponent(currentMonth()));
   $("dashProfit").textContent=money(finance.profit);
 
   const target=Number(finance.target||0);
@@ -971,7 +978,6 @@ async function loadDashboard(){
 
   $("dashGoalBar").style.width=progress+"%";
   $("dashMessage").textContent="Painel atualizado com sucesso.";
-
  }catch(error){
   $("dashMessage").textContent="Erro ao atualizar painel: "+error.message;
  }
