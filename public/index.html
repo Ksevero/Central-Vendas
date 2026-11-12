@@ -401,19 +401,44 @@ async function loadContacts(){
 
 function renderContacts(){
   let q=($('contactSearch').value||'').toLowerCase();
-  let a=contacts.filter(c=>[c.name,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q));
-  $('contactsTable').innerHTML=a.map(c=>`
-    <tr>
-      <td>${esc(c.name)}</td>
-      <td>${esc(c.phone)}</td>
-      <td>${esc(c.email)}</td>
-      <td>${esc(c.notes)}</td>
-      <td>
-        <button class="btn secondary small" onclick="editContact(${c.id})">Editar</button>
-        <button class="btn danger small" onclick="deleteContact(${c.id})">Excluir</button>
-      </td>
-    </tr>
-  `).join('')||'<tr><td colspan="5">Nenhum cliente.</td></tr>';
+
+  let a=contacts.filter(c=>
+    [c.name,c.phone,c.email,c.notes]
+      .join(' ')
+      .toLowerCase()
+      .includes(q)
+  );
+
+  $('contactsTable').innerHTML=a.map(c=>{
+    let phone=String(c.phone||'').replace(/\D/g,'');
+
+    if(phone && !phone.startsWith('55')){
+      phone='55'+phone;
+    }
+
+    let whatsapp=phone
+      ? `<a class="btn small" target="_blank" rel="noopener"
+           href="https://wa.me/${phone}">
+           WhatsApp
+         </a>`
+      : '<span class="muted">Sem telefone</span>';
+
+    return `
+      <tr>
+        <td>${esc(c.name)}</td>
+        <td>${esc(c.phone)}</td>
+        <td>${esc(c.email)}</td>
+        <td>${esc(c.notes)}</td>
+        <td>
+          ${whatsapp}
+          <button class="btn secondary small"
+            onclick="editContact(${c.id})">Editar</button>
+          <button class="btn danger small"
+            onclick="deleteContact(${c.id})">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join('')||'<tr><td colspan="5">Nenhum cliente.</td></tr>';
 }
 
 async function saveContact(e){
@@ -440,6 +465,7 @@ async function saveContact(e){
 
 function editContact(id){
   let c=contacts.find(x=>+x.id===+id);
+  if(!c)return;
   $('contactId').value=c.id;
   $('contactName').value=c.name;
   $('contactPhone').value=c.phone;
@@ -605,6 +631,7 @@ async function saveConsultant(e){
 
 function editConsultant(id){
   let c=consultants.find(x=>+x.id===+id);
+  if(!c)return;
   $('consultantId').value=c.id;
   $('consultantName').value=c.name;
   $('consultantRate').value=c.commission_rate;
@@ -805,6 +832,7 @@ async function exportCsv(url,name){
 $('password').addEventListener('keydown',e=>{
   if(e.key==='Enter')login();
 });
+
 $('financeMonth').value=monthNow();
 $('expenseDate').value=today();
 </script>
