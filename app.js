@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -185,6 +186,22 @@ async function initDatabase() {
     )
   `);
 
+  // HISTÓRICO DO WHATSAPP
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+      id BIGSERIAL PRIMARY KEY,
+      wamid TEXT UNIQUE,
+      wa_id TEXT NOT NULL,
+      direction TEXT NOT NULL,
+      message_type TEXT DEFAULT 'text',
+      body TEXT DEFAULT '',
+      status TEXT DEFAULT 'received',
+      message_timestamp TIMESTAMPTZ,
+      raw_payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
   console.log("Banco de dados inicializado.");
 }
 
@@ -205,6 +222,7 @@ app.post("/api/login", async (req, res) => {
 
     if (
       safeEqual(username, process.env.ADMIN_USER || "admin") &&
+      process.env.ADMIN_PASSWORD &&
       safeEqual(password, process.env.ADMIN_PASSWORD)
     ) {
       const token = crypto.randomBytes(32).toString("hex");
@@ -276,7 +294,7 @@ app.get("/api/me", authenticate, (req, res) => {
   res.json(req.user);
 });
 
-// CLIENTES: SOMENTE ADMINISTRADOR
+// CLIENTES
 app.get("/api/contacts", authenticate, adminOnly, async (req, res) => {
   try {
     const r = await pool.query(
@@ -558,7 +576,7 @@ app.delete("/api/consultants/:id", authenticate, adminOnly, async (req, res) => 
   }
 });
 
-// CRIAR OU ATUALIZAR ACESSO DO CONSULTOR
+// ACESSO DO CONSULTOR
 app.put("/api/consultants/:id/access", authenticate, adminOnly, async (req, res) => {
   try {
     const username = String(req.body?.username || "").trim();
@@ -918,7 +936,7 @@ app.get("/api/sales/export", authenticate, adminOnly, async (req, res) => {
   }
 });
 
-// DESPESAS: SOMENTE ADMINISTRADOR
+// DESPESAS
 app.get("/api/expenses", authenticate, adminOnly, async (req, res) => {
   try {
     const r = await pool.query(
@@ -1379,44 +1397,264 @@ app.get("/api/finance/summary", authenticate, async (req, res) => {
   }
 });
 
-// WEBHOOK WHATSAPP
+// ======================================
+// WHATSAPP BUSINESS - API OFICIAL META
+// ======================================
+
+// ENVIA MENSAGEM DE TEXTO
+app.post(
+  "/api/whatsapp/send",
+  authenticate,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const token = process.env.WHATSAPP_TOKEN;
+      const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+      const version = process.env.META_GRAPH_VERSION;
+
+      if (!token || !phoneNumberId || !version) {
+        return res.status(503).json({
+          error: "Configure WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID e META_GRAPH_VERSION no servidor."
+        });
+      }
+
+      if (typeof fetch !== "function") {
+        return res.status(500).json({
+          error: "O servidor precisa usar Node.js 18 ou superior."
+        });
+      }
+
+      let to = String(req.body?.to || "").replace(/\D/g, "");
+      const message = String(req.body?.message || "").trim();
+
+      if (to.length === 10 || to.length === 11) {
+        to = "55" + to;
+      }
+
+      if (!/^\d{8,15}$/.test(to)) {
+        return res.status(400).json({
+          error: "Telefone inválido. Informe DDD e número."
+        });
+      }
+
+      if (!message || message.length > 4096) {
+        return res.status(400).json({
+          error: "A mensagem deve ter entre 1 e 4096 caracteres."
+        });
+      }
+
+      const response = await fetch(
+        `https://graph.facebook.com/${version}/${phoneNumberId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to,
+            type: "text",
+            text: {
+              preview_url: false,
+              body: message
+            }
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Erro da API WhatsApp:", result);
+
+        return res.status(502).json({
+          error: result.error?.message || "A Meta não aceitou o envio."
+        });
+      }
+
+      const wamid = result.messages?.[0]?.id || null;
+
+      if (wamid) {
+        await pool.query(`
+          INSERT INTO whatsapp_messages (
+            wamid,wa_id,direction,message_type,body,status,raw_payload
+          )
+          VALUES ($1,$2,'outbound','text',$3,'accepted',$4::jsonb)
+          ON CONFLICT (wamid) DO NOTHING
+        `, [
+          wamid,
+          to,
+          message,
+          JSON.stringify(result)
+        ]);
+      }
+
+      res.json({
+        success: true,
+        message: "Mensagem aceita pela API do WhatsApp.",
+        wamid
+      });
+
+    } catch (e) {
+      console.error("Erro ao enviar WhatsApp:", e);
+
+      res.status(500).json({
+        error: "Erro interno ao enviar mensagem."
+      });
+    }
+  }
+);
+
+
+// CONSULTA HISTÓRICO DE MENSAGENS
+app.get(
+  "/api/whatsapp/messages",
+  authenticate,
+  adminOnly,
+  async (req, res) => {
+    try {
+      let phone = String(req.query.phone || "")
+        .replace(/\D/g, "");
+
+      if (phone.length === 10 || phone.length === 11) {
+        phone = "55" + phone;
+      }
+
+      if (!phone) {
+        return res.status(400).json({
+          error: "Informe o telefone do cliente."
+        });
+      }
+
+      const r = await pool.query(`
+        SELECT *
+        FROM whatsapp_messages
+        WHERE wa_id=$1
+        ORDER BY created_at ASC
+        LIMIT 200
+      `, [phone]);
+
+      res.json(r.rows);
+
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({
+        error: "Erro ao consultar mensagens."
+      });
+    }
+  }
+);
+
+
+// VERIFICAÇÃO DO WEBHOOK META
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+  const verifyToken = process.env.META_VERIFY_TOKEN;
 
   if (
+    verifyToken &&
     mode === "subscribe" &&
-    safeEqual(token, process.env.META_VERIFY_TOKEN)
+    safeEqual(token, verifyToken)
   ) {
     return res.status(200).send(challenge);
   }
 
-  res.sendStatus(403);
+  return res.sendStatus(403);
 });
 
-app.post("/webhook", (req, res) => {
-  const secret = process.env.META_APP_SECRET;
 
-  if (secret) {
+// RECEBER MENSAGENS E STATUS DO WHATSAPP
+app.post("/webhook", async (req, res) => {
+  try {
+    const secret = process.env.META_APP_SECRET;
     const signature = req.headers["x-hub-signature-256"];
+
+    if (!secret) {
+      console.error("META_APP_SECRET não configurado.");
+      return res.sendStatus(503);
+    }
 
     const expected = "sha256=" + crypto
       .createHmac("sha256", secret)
       .update(req.rawBody || Buffer.from(""))
       .digest("hex");
 
-    if (!safeEqual(signature, expected)) {
+    if (!signature || !safeEqual(signature, expected)) {
       return res.sendStatus(401);
     }
+
+    for (const entry of req.body?.entry || []) {
+      for (const change of entry.changes || []) {
+        const value = change.value || {};
+
+        for (const msg of value.messages || []) {
+          const waId = String(msg.from || "").replace(/\D/g, "");
+
+          if (!waId || !msg.id) continue;
+
+          let body = "";
+
+          if (msg.type === "text") {
+            body = msg.text?.body || "";
+          } else if (msg.type === "button") {
+            body = msg.button?.text || "";
+          } else if (msg.type === "interactive") {
+            body =
+              msg.interactive?.button_reply?.title ||
+              msg.interactive?.list_reply?.title ||
+              "";
+          } else {
+            body = `[Mensagem do tipo ${msg.type || "desconhecido"}]`;
+          }
+
+          const timestamp = msg.timestamp
+            ? new Date(Number(msg.timestamp) * 1000)
+            : null;
+
+          await pool.query(`
+            INSERT INTO whatsapp_messages (
+              wamid,wa_id,direction,message_type,body,status,
+              message_timestamp,raw_payload
+            )
+            VALUES (
+              $1,$2,'inbound',$3,$4,'received',$5,$6::jsonb
+            )
+            ON CONFLICT (wamid) DO NOTHING
+          `, [
+            msg.id,
+            waId,
+            msg.type || "unknown",
+            body,
+            timestamp,
+            JSON.stringify(msg)
+          ]);
+        }
+
+        for (const item of value.statuses || []) {
+          if (!item.id || !item.status) continue;
+
+          await pool.query(`
+            UPDATE whatsapp_messages
+            SET status=$1
+            WHERE wamid=$2
+          `, [
+            item.status,
+            item.id
+          ]);
+        }
+      }
+    }
+
+    return res.sendStatus(200);
+
+  } catch (e) {
+    console.error("Erro no webhook WhatsApp:", e);
+    return res.sendStatus(500);
   }
-
-  console.log(
-    "Evento recebido do WhatsApp:",
-    JSON.stringify(req.body)
-  );
-
-  res.sendStatus(200);
 });
 
 app.use((req, res) => {
