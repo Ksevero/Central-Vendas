@@ -1,0 +1,306 @@
+
+const express = require("express");
+const { Pool } = require("pg");
+const crypto = require("crypto");
+require("dotenv").config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = Buffer.from(buf);
+  }
+}));
+
+app.use(express.static("public"));
+
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === "true"
+        ? { rejectUnauthorized: false }
+        : undefined
+    })
+  : null;
+
+const sessions = new Map();
+
+function safeEqual(a, b) {
+  const first = Buffer.from(String(a));
+  const second = Buffer.from(String(b));
+
+  if (first.length !== second.length) return false;
+  return crypto.timingSafeEqual(first, second);
+}
+
+function requireLogin(req, res, next) {
+  const token = req.headers.cookie
+    ?.split(";")
+    .map(v => v.trim())
+    .find(v => v.startsWith("central_session="))
+    ?.split("=")[1];
+
+  if (!token || !sessions.has(token)) {
+    return res.status(401).json({ error: "Faça login." });
+  }
+
+  next();
+}
+
+async function initDatabase() {
+  if (!pool) return;
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'Novo',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+}
+
+app.get("/health", async (req, res) => {
+  let database = false;
+
+  if (pool) {
+    try {
+      await pool.query("SELECT 1");
+      database = true;
+    } catch (_) {}
+  }
+
+  res.json({
+    status: "online",
+    database
+  });
+});
+
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body || {};
+
+  const adminUser = process.env.ADMIN_USER;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (
+    !adminUser ||
+    !adminPassword ||
+    !safeEqual(username || "", adminUser) ||
+    !safeEqual(password || "", adminPassword)
+  ) {
+    return res.status(401).json({
+      error: "Usuário ou senha incorretos."
+    });
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  sessions.set(token, true);
+
+  res.setHeader(
+    "Set-Cookie",
+    `central_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=86400`
+  );
+
+  res.json({ success: true });
+});
+
+app.post("/api/logout", requireLogin, (req, res) => {
+  const token = req.headers.cookie
+    .split(";")
+    .map(v => v.trim())
+    .find(v => v.startsWith("central_session="))
+    .split("=")[1];
+
+  sessions.delete(token);
+
+  res.setHeader(
+    "Set-Cookie",
+    "central_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
+  );
+
+  res.json({ success: true });
+});
+
+app.get("/api/contacts", requireLogin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ error: "Banco de dados não configurado." });
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM contacts ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar contatos." });
+  }
+});
+
+app.post("/api/contacts", requireLogin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ error: "Banco de dados não configurado." });
+  }
+
+  const { name, phone, email, notes, status } = req.body || {};
+
+  if (!name || !String(name).trim()) {
+    return res.status(400).json({ error: "Informe o nome do contato." });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO contacts (name, phone, email, notes, status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        String(name).trim(),
+        phone || "",
+        email || "",
+        notes || "",
+        status || "Novo"
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao salvar contato." });
+  }
+});
+
+app.put("/api/contacts/:id", requireLogin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ error: "Banco de dados não configurado." });
+  }
+
+  const { name, phone, email, notes, status } = req.body || {};
+
+  try {
+    const result = await pool.query(
+      `UPDATE contacts
+       SET name = $1, phone = $2, email = $3, notes = $4, status = $5
+       WHERE id = $6
+       RETURNING *`,
+      [
+        name,
+        phone || "",
+        email || "",
+        notes || "",
+        status || "Novo",
+        req.params.id
+      ]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Contato não encontrado." });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar contato." });
+  }
+});
+
+app.delete("/api/contacts/:id", requireLogin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ error: "Banco de dados não configurado." });
+  }
+
+  try {
+    const result = await pool.query(
+      "DELETE FROM contacts WHERE id = $1",
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Contato não encontrado." });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao excluir contato." });
+  }
+});
+
+app.get("/api/contacts/export", requireLogin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).send("Banco de dados não configurado.");
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT name, phone, email, notes, status, created_at FROM contacts ORDER BY created_at DESC"
+    );
+
+    const escape = value =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const rows = [
+      ["Nome", "Telefone", "Email", "Observações", "Status", "Cadastro"],
+      ...result.rows.map(c => [
+        c.name, c.phone, c.email, c.notes, c.status, c.created_at
+      ])
+    ];
+
+    const csv = "\uFEFF" + rows
+      .map(row => row.map(escape).join(";"))
+      .join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=contatos.csv"
+    );
+
+    res.send(csv);
+  } catch (error) {
+    res.status(500).send("Erro ao exportar contatos.");
+  }
+});
+
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (
+    mode === "subscribe" &&
+    token &&
+    safeEqual(token, process.env.META_VERIFY_TOKEN || "")
+  ) {
+    return res.status(200).send(challenge);
+  }
+
+  res.sendStatus(403);
+});
+
+app.post("/webhook", (req, res) => {
+  const appSecret = process.env.META_APP_SECRET;
+
+  if (appSecret) {
+    const signature = req.headers["x-hub-signature-256"] || "";
+    const expected = "sha256=" + crypto
+      .createHmac("sha256", appSecret)
+      .update(req.rawBody || Buffer.from(""))
+      .digest("hex");
+
+    if (!safeEqual(signature, expected)) {
+      return res.sendStatus(401);
+    }
+  }
+
+  console.log("Evento recebido do WhatsApp.");
+  res.sendStatus(200);
+});
+
+app.listen(PORT, async () => {
+  try {
+    await initDatabase();
+    console.log(`Central de Vendas online na porta ${PORT}`);
+  } catch (error) {
+    console.error("Erro ao iniciar banco de dados:", error.message);
+  }
+});
