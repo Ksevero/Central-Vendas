@@ -1,77 +1,80 @@
 
+require("dotenv").config();
+
 const express = require("express");
 const { Pool } = require("pg");
 const crypto = require("crypto");
-require("dotenv").config();
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({
   verify: (req, res, buf) => {
-    req.rawBody = Buffer.from(buf);
+    req.rawBody = buf;
   }
 }));
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-const pool = process.env.DATABASE_URL
-  ? new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_SSL === "true"
-        ? { rejectUnauthorized: false }
-        : undefined
-    })
-  : null;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_SSL === "true"
+    ? { rejectUnauthorized: false }
+    : false
+});
 
 const sessions = new Map();
 
 function safeEqual(a, b) {
-  const first = Buffer.from(String(a));
-  const second = Buffer.from(String(b));
+  const first = Buffer.from(String(a || ""));
+  const second = Buffer.from(String(b || ""));
 
-  if (first.length !== second.length) return false;
-  return crypto.timingSafeEqual(first, second);
+  return first.length === second.length &&
+    crypto.timingSafeEqual(first, second);
 }
 
-function requireLogin(req, res, next) {
-  const token = req.headers.cookie
-    ?.split(";")
-    .map(v => v.trim())
-    .find(v => v.startsWith("central_session="))
-    ?.split("=")[1];
+function authenticate(req, res, next) {
+  const authorization = req.headers.authorization || "";
+  const token = authorization.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : req.headers["x-session-token"];
 
   if (!token || !sessions.has(token)) {
-    return res.status(401).json({ error: "Faça login." });
+    return res.status(401).json({
+      error: "Sessão inválida ou expirada."
+    });
   }
 
   next();
 }
 
 async function initDatabase() {
-  if (!pool) return;
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS contacts (
-      id SERIAL PRIMARY KEY,
+      id BIGSERIAL PRIMARY KEY,
       name TEXT NOT NULL,
-      phone TEXT,
-      email TEXT,
-      notes TEXT,
+      phone TEXT DEFAULT '',
+      email TEXT DEFAULT '',
       status TEXT DEFAULT 'Novo',
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      notes TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+
+  console.log("Banco de dados inicializado.");
 }
 
+// Verificação de funcionamento
 app.get("/health", async (req, res) => {
   let database = false;
 
-  if (pool) {
-    try {
-      await pool.query("SELECT 1");
-      database = true;
-    } catch (_) {}
+  try {
+    await pool.query("SELECT 1");
+    database = true;
+  } catch (error) {
+    console.error("Erro no banco:", error.message);
   }
 
   res.json({
@@ -80,18 +83,21 @@ app.get("/health", async (req, res) => {
   });
 });
 
+// Login
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body || {};
 
-  const adminUser = process.env.ADMIN_USER;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const validUser = safeEqual(
+    username,
+    process.env.ADMIN_USER || "admin"
+  );
 
-  if (
-    !adminUser ||
-    !adminPassword ||
-    !safeEqual(username || "", adminUser) ||
-    !safeEqual(password || "", adminPassword)
-  ) {
+  const validPassword = safeEqual(
+    password,
+    process.env.ADMIN_PASSWORD
+  );
+
+  if (!validUser || !validPassword) {
     return res.status(401).json({
       error: "Usuário ou senha incorretos."
     });
@@ -100,167 +106,182 @@ app.post("/api/login", (req, res) => {
   const token = crypto.randomBytes(32).toString("hex");
   sessions.set(token, true);
 
-  res.setHeader(
-    "Set-Cookie",
-    `central_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=86400`
-  );
-
-  res.json({ success: true });
+  res.json({
+    success: true,
+    token
+  });
 });
 
-app.post("/api/logout", requireLogin, (req, res) => {
-  const token = req.headers.cookie
-    .split(";")
-    .map(v => v.trim())
-    .find(v => v.startsWith("central_session="))
-    .split("=")[1];
+// Logout
+app.post("/api/logout", authenticate, (req, res) => {
+  const authorization = req.headers.authorization || "";
+  const token = authorization.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : req.headers["x-session-token"];
 
   sessions.delete(token);
 
-  res.setHeader(
-    "Set-Cookie",
-    "central_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
-  );
-
   res.json({ success: true });
 });
 
-app.get("/api/contacts", requireLogin, async (req, res) => {
-  if (!pool) {
-    return res.status(503).json({ error: "Banco de dados não configurado." });
-  }
-
+// Listar contatos
+app.get("/api/contacts", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM contacts ORDER BY created_at DESC"
     );
+
     res.json(result.rows);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Erro ao buscar contatos." });
   }
 });
 
-app.post("/api/contacts", requireLogin, async (req, res) => {
-  if (!pool) {
-    return res.status(503).json({ error: "Banco de dados não configurado." });
-  }
-
-  const { name, phone, email, notes, status } = req.body || {};
-
-  if (!name || !String(name).trim()) {
-    return res.status(400).json({ error: "Informe o nome do contato." });
-  }
-
+// Criar contato
+app.post("/api/contacts", authenticate, async (req, res) => {
   try {
+    const { name, phone, email, status, notes } = req.body || {};
+
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({
+        error: "O nome é obrigatório."
+      });
+    }
+
     const result = await pool.query(
-      `INSERT INTO contacts (name, phone, email, notes, status)
+      `INSERT INTO contacts
+       (name, phone, email, status, notes)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [
         String(name).trim(),
         phone || "",
         email || "",
-        notes || "",
-        status || "Novo"
+        status || "Novo",
+        notes || ""
       ]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao salvar contato." });
+    console.error(error);
+    res.status(500).json({ error: "Erro ao criar contato." });
   }
 });
 
-app.put("/api/contacts/:id", requireLogin, async (req, res) => {
-  if (!pool) {
-    return res.status(503).json({ error: "Banco de dados não configurado." });
-  }
-
-  const { name, phone, email, notes, status } = req.body || {};
-
+// Atualizar contato
+app.put("/api/contacts/:id", authenticate, async (req, res) => {
   try {
+    const { name, phone, email, status, notes } = req.body || {};
+
     const result = await pool.query(
       `UPDATE contacts
-       SET name = $1, phone = $2, email = $3, notes = $4, status = $5
+       SET name = $1,
+           phone = $2,
+           email = $3,
+           status = $4,
+           notes = $5,
+           updated_at = NOW()
        WHERE id = $6
        RETURNING *`,
       [
         name,
         phone || "",
         email || "",
-        notes || "",
         status || "Novo",
+        notes || "",
         req.params.id
       ]
     );
 
     if (!result.rowCount) {
-      return res.status(404).json({ error: "Contato não encontrado." });
+      return res.status(404).json({
+        error: "Contato não encontrado."
+      });
     }
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Erro ao atualizar contato." });
   }
 });
 
-app.delete("/api/contacts/:id", requireLogin, async (req, res) => {
-  if (!pool) {
-    return res.status(503).json({ error: "Banco de dados não configurado." });
-  }
-
+// Excluir contato
+app.delete("/api/contacts/:id", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      "DELETE FROM contacts WHERE id = $1",
+      "DELETE FROM contacts WHERE id = $1 RETURNING id",
       [req.params.id]
     );
 
     if (!result.rowCount) {
-      return res.status(404).json({ error: "Contato não encontrado." });
+      return res.status(404).json({
+        error: "Contato não encontrado."
+      });
     }
 
     res.json({ success: true });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Erro ao excluir contato." });
   }
 });
 
-app.get("/api/contacts/export", requireLogin, async (req, res) => {
-  if (!pool) {
-    return res.status(503).send("Banco de dados não configurado.");
-  }
-
+// Exportar contatos em CSV
+app.get("/api/contacts/export", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT name, phone, email, notes, status, created_at FROM contacts ORDER BY created_at DESC"
+      "SELECT name, phone, email, status, notes, created_at FROM contacts ORDER BY created_at DESC"
     );
 
-    const escape = value =>
+    const escapeCSV = (value) =>
       `"${String(value ?? "").replace(/"/g, '""')}"`;
 
-    const rows = [
-      ["Nome", "Telefone", "Email", "Observações", "Status", "Cadastro"],
-      ...result.rows.map(c => [
-        c.name, c.phone, c.email, c.notes, c.status, c.created_at
-      ])
+    const header = [
+      "Nome",
+      "Telefone",
+      "Email",
+      "Status",
+      "Observações",
+      "Criado em"
     ];
 
-    const csv = "\uFEFF" + rows
-      .map(row => row.map(escape).join(";"))
-      .join("\n");
-
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=contatos.csv"
+    const lines = result.rows.map((contact) =>
+      [
+        contact.name,
+        contact.phone,
+        contact.email,
+        contact.status,
+        contact.notes,
+        contact.created_at
+      ].map(escapeCSV).join(";")
     );
 
-    res.send(csv);
+    const csv = [
+      header.map(escapeCSV).join(";"),
+      ...lines
+    ].join("\n");
+
+    res.setHeader(
+      "Content-Type",
+      "text/csv; charset=utf-8"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="contatos.csv"'
+    );
+
+    res.send("\uFEFF" + csv);
   } catch (error) {
-    res.status(500).send("Erro ao exportar contatos.");
+    console.error(error);
+    res.status(500).json({ error: "Erro ao exportar contatos." });
   }
 });
 
+// Verificação do webhook do WhatsApp
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -268,8 +289,7 @@ app.get("/webhook", (req, res) => {
 
   if (
     mode === "subscribe" &&
-    token &&
-    safeEqual(token, process.env.META_VERIFY_TOKEN || "")
+    safeEqual(token, process.env.META_VERIFY_TOKEN)
   ) {
     return res.status(200).send(challenge);
   }
@@ -277,30 +297,50 @@ app.get("/webhook", (req, res) => {
   res.sendStatus(403);
 });
 
+// Receber eventos do webhook
 app.post("/webhook", (req, res) => {
   const appSecret = process.env.META_APP_SECRET;
 
   if (appSecret) {
-    const signature = req.headers["x-hub-signature-256"] || "";
-    const expected = "sha256=" + crypto
-      .createHmac("sha256", appSecret)
-      .update(req.rawBody || Buffer.from(""))
-      .digest("hex");
+    const signature = req.headers["x-hub-signature-256"];
+
+    const expected =
+      "sha256=" +
+      crypto
+        .createHmac("sha256", appSecret)
+        .update(req.rawBody || Buffer.from(""))
+        .digest("hex");
 
     if (!safeEqual(signature, expected)) {
       return res.sendStatus(401);
     }
   }
 
-  console.log("Evento recebido do WhatsApp.");
+  console.log(
+    "Evento recebido do WhatsApp:",
+    JSON.stringify(req.body)
+  );
+
   res.sendStatus(200);
 });
 
+// Página não encontrada
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Rota não encontrada."
+  });
+});
+
+// Inicialização
 app.listen(PORT, async () => {
+  console.log(`Central de Vendas rodando na porta ${PORT}`);
+
   try {
     await initDatabase();
-    console.log(`Central de Vendas online na porta ${PORT}`);
   } catch (error) {
-    console.error("Erro ao iniciar banco de dados:", error.message);
+    console.error(
+      "Não foi possível inicializar o banco:",
+      error.message
+    );
   }
 });
