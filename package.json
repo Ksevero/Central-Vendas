@@ -1,9 +1,9 @@
 {
   "name": "central-vendas",
-  "version": "0.5.2",
-  "main": "server.js/server.js",
+  "version": "0.5.3",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js/server.js"
+    "start": "node app.js"
   },
   "engines": {
     "node": ">=20"
