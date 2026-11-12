@@ -1,367 +1,296 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Central de Vendas</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f9;color:#202938;font-family:Arial,sans-serif}
-header{background:#17243a;color:white;padding:20px}
-header h1{margin:0 0 6px;font-size:24px}
+header{background:#17243a;color:#fff;padding:20px}
+header h1{margin:0 0 5px;font-size:23px}
 header p{margin:0;color:#cbd5e1;font-size:13px}
-nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:white;border-bottom:1px solid #e2e8f0}
-nav button{background:#edf1f7;color:#263449;border:0;padding:11px 15px;border-radius:8px;font-weight:bold;cursor:pointer}
-nav button.active{background:#17243a;color:white}
-main{max-width:1150px;margin:22px auto;padding:0 14px}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:3}
+nav button,.btn{border:0;border-radius:8px;padding:11px 15px;font-weight:bold;cursor:pointer;background:#17243a;color:#fff}
+nav button{background:#edf1f7;color:#263449}
+nav button.active{background:#17243a;color:#fff}
+main{max-width:1100px;margin:22px auto;padding:0 14px}
 .panel{display:none}
 .panel.active{display:block}
-.card{background:white;border:1px solid #e4e8ef;border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 7px #17243a08}
-h2{font-size:19px;margin:0 0 16px}
-h3{font-size:16px;margin:0 0 12px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
-.metric{background:white;border:1px solid #e4e8ef;border-radius:12px;padding:16px}
-.metric small{color:#64748b;display:block;margin-bottom:8px}
-.metric strong{font-size:21px;overflow-wrap:anywhere}
-input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;background:white;color:#202938}
-textarea{min-height:75px;resize:vertical}
+.card,.metric{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:17px;margin-bottom:15px;box-shadow:0 2px 7px #17243a08}
+h2{font-size:19px;margin:0 0 14px}
+h3{font-size:16px;margin:0 0 10px}
+.grid,.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:15px}
+.metric small{display:block;color:#64748b;margin-bottom:8px}
+.metric strong{font-size:21px}
 label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px;color:#475569}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;background:#fff;color:#202938}
+textarea{min-height:70px}
 .field{margin-bottom:12px}
-button{cursor:pointer}
-.btn{border:0;border-radius:8px;padding:11px 15px;font-weight:bold;background:#17243a;color:white}
-.btn.secondary{background:#e8edf5;color:#263449}
-.btn.danger{background:#fee2e2;color:#991b1b}
-.btn.success{background:#dcfce7;color:#166534}
-.btn.small{padding:7px 10px;font-size:12px;margin:2px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:600px}
-th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #edf0f4;font-size:13px;vertical-align:middle}
-th{color:#64748b;background:#f8fafc}
+.secondary{background:#e8edf5;color:#263449}
+.danger{background:#fee2e2;color:#991b1b}
+.small{padding:7px 10px;font-size:12px;margin:2px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:580px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #edf0f4;font-size:13px}
+th{background:#f8fafc;color:#64748b}
 .muted{color:#64748b;font-size:13px}
-.message{font-size:13px;margin-top:10px;min-height:16px}
+.message{font-size:13px;margin-top:9px;min-height:16px}
 .good{color:#15803d}
 .bad{color:#b91c1c}
-.tag{display:inline-block;padding:5px 8px;border-radius:20px;font-size:11px;font-weight:bold;background:#e2e8f0}
-.tag.paid{background:#dcfce7;color:#166534}
-.tag.pending{background:#fef3c7;color:#92400e}
-.tag.cancelled{background:#fee2e2;color:#991b1b}
-.progress{height:13px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin:10px 0}
-.progress div{height:100%;background:#16a34a;width:0%;transition:width .2s}
+.tag{display:inline-block;padding:5px 8px;border-radius:20px;background:#e2e8f0;font-size:11px;font-weight:bold}
+.paid{background:#dcfce7;color:#166534}
+.pending{background:#fef3c7;color:#92400e}
+.cancelled{background:#fee2e2;color:#991b1b}
+.progress{height:12px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin:9px 0}
+.progress div{height:100%;background:#16a34a}
+.login-wrap{max-width:420px;margin:50px auto;padding:0 15px}
 .hidden{display:none!important}
-.login-wrap{max-width:420px;margin:55px auto;padding:0 15px}
-.login-wrap .card{padding:24px}
-.login-wrap h2{font-size:22px}
-footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
-.dashboard-chart{display:flex;align-items:flex-end;gap:10px;height:190px;padding:15px 5px 0;border-bottom:1px solid #e2e8f0}
-.dashboard-month{flex:1;min-width:0;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}
-.dashboard-bar{width:min(100%,38px);min-height:3px;background:#2563eb;border-radius:6px 6px 0 0}
-.dashboard-month small{font-size:10px;color:#64748b}
-.dashboard-value{font-size:10px;color:#475569;overflow-wrap:anywhere}
-.dashboard-row{margin:13px 0}
-.dashboard-row-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
-.dashboard-track{height:10px;background:#e8edf5;border-radius:20px;overflow:hidden}
-.dashboard-fill{height:100%;border-radius:20px;background:#2563eb}
-.dashboard-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.dashboard-status span{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:bold}
-.dashboard-status .paid{background:#dcfce7;color:#166534}
-.dashboard-status .pending{background:#fef3c7;color:#92400e}
-.dashboard-status .cancelled{background:#fee2e2;color:#991b1b}
-.consultant-goal-card{border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin:12px 0}
-.consultant-goal-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.consultant-goal-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
-.consultant-goal-stats div{background:#f8fafc;padding:9px;border-radius:8px}
-.consultant-goal-stats small{display:block;color:#64748b;font-size:11px;margin-bottom:5px}
-.consultant-goal-stats strong{font-size:14px;overflow-wrap:anywhere}
-.goal-edit{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
-.goal-edit .field{flex:1;min-width:150px;margin:0}
-@media(max-width:760px){
- .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
- .grid{grid-template-columns:1fr}
- header{padding:17px}
- header h1{font-size:21px}
- nav{position:sticky;top:0;z-index:5}
- nav button{flex:1}
+.goal-card{border:1px solid #e2e8f0;border-radius:10px;padding:13px;margin:12px 0}
+.goal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.goal-stats div{background:#f8fafc;padding:9px;border-radius:8px}
+.goal-stats small{display:block;color:#64748b;font-size:11px}
+.goal-stats strong{font-size:14px}
+footer{text-align:center;color:#94a3b8;padding:20px;font-size:12px}
+@media(max-width:700px){
+.metrics{grid-template-columns:repeat(2,1fr)}
+.grid{grid-template-columns:1fr}
+nav button{flex:1}
 }
-@media(max-width:500px){
- .dashboard-chart{gap:4px}
- .dashboard-value{font-size:9px}
- .consultant-goal-stats{grid-template-columns:1fr 1fr}
-}
-@media(max-width:380px){
- .metrics{grid-template-columns:1fr 1fr}
- .metric strong{font-size:18px}
-}
+@media(max-width:420px){.goal-stats{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
 <header>
- <h1>Central de Vendas</h1>
- <p>Gestão de clientes, vendas e financeiro</p>
+<h1>Central de Vendas</h1>
+<p>Gestão de clientes, vendas e resultados</p>
 </header>
 
 <section id="loginScreen" class="login-wrap">
- <div class="card">
-  <h2>Entrar no sistema</h2>
-  <div class="field">
-   <label for="username">Usuário</label>
-   <input id="username" autocomplete="username" placeholder="Seu usuário" value="admin">
-  </div>
-  <div class="field">
-   <label for="password">Senha</label>
-   <input id="password" type="password" autocomplete="current-password" placeholder="Sua senha">
-  </div>
-  <button class="btn" style="width:100%" onclick="login()">Entrar</button>
-  <div id="loginMessage" class="message"></div>
- </div>
+<div class="card">
+<h2>Entrar no sistema</h2>
+<div class="field">
+<label>Usuário</label>
+<input id="username" autocomplete="username" value="admin">
+</div>
+<div class="field">
+<label>Senha</label>
+<input id="password" type="password" autocomplete="current-password">
+</div>
+<button class="btn" style="width:100%" onclick="login()">Entrar</button>
+<div id="loginMessage" class="message"></div>
+</div>
 </section>
 
 <div id="appScreen" class="hidden">
-<nav>
- <button class="active" data-tab="dashboard" onclick="showTab('dashboard',this)">Painel</button>
- <button data-tab="clients" onclick="showTab('clients',this)">Clientes</button>
- <button data-tab="sales" onclick="showTab('sales',this)">Vendas</button>
- <button data-tab="finance" onclick="showTab('finance',this)">Financeiro</button>
- <button class="secondary" onclick="logout()">Sair</button>
+<nav id="nav">
+<button data-tab="dashboard" class="active" onclick="showTab('dashboard',this)">Painel</button>
+<button data-tab="clients" class="admin-only" onclick="showTab('clients',this)">Clientes</button>
+<button data-tab="sales" onclick="showTab('sales',this)">Vendas</button>
+<button data-tab="finance" class="admin-only" onclick="showTab('finance',this)">Financeiro</button>
+<button onclick="logout()">Sair</button>
 </nav>
 
 <main>
 
-<!-- PAINEL -->
 <section id="dashboard" class="panel active">
- <div class="card">
-  <h2>Painel de desempenho</h2>
-  <p class="muted">Acompanhe os resultados da sua operação.</p>
- </div>
+<div class="card">
+<h2 id="welcomeTitle">Painel de desempenho</h2>
+<p class="muted" id="welcomeText">Acompanhe os resultados.</p>
+</div>
 
- <div class="metrics">
-  <div class="metric"><small>Faturamento recebido</small><strong id="dashRevenue">R$ 0,00</strong></div>
-  <div class="metric"><small>Vendas registradas</small><strong id="dashSales">0</strong></div>
-  <div class="metric"><small>Ticket médio pago</small><strong id="dashAverage">R$ 0,00</strong></div>
-  <div class="metric"><small>Lucro estimado do mês</small><strong id="dashProfit">R$ 0,00</strong></div>
- </div>
+<div class="metrics">
+<div class="metric"><small>Vendas pagas</small><strong id="dashRevenue">R$ 0,00</strong></div>
+<div class="metric"><small>Vendas registradas</small><strong id="dashSales">0</strong></div>
+<div class="metric"><small>Comissão acumulada</small><strong id="dashCommission">R$ 0,00</strong></div>
+<div class="metric"><small>Meta do mês</small><strong id="dashGoal">R$ 0,00</strong></div>
+</div>
 
- <div class="card">
-  <h2>Faturamento dos últimos 6 meses</h2>
-  <p class="muted">Considera vendas com situação Pago.</p>
-  <div id="dashChart" class="dashboard-chart"></div>
- </div>
+<div class="card">
+<h2>Desempenho do mês</h2>
+<p id="dashGoalText" class="muted">Carregando...</p>
+<div class="progress"><div id="dashGoalBar" style="width:0%"></div></div>
+<div id="dashStatus" class="muted"></div>
+</div>
 
- <div class="card">
-  <h2>Ranking de consultores</h2>
-  <p class="muted">Classificação pelo valor das vendas pagas.</p>
-  <div id="dashRanking"><p class="muted">Carregando ranking...</p></div>
- </div>
-
- <div class="card">
-  <h2>Situação das vendas</h2>
-  <div id="dashStatuses" class="dashboard-status"></div>
- </div>
-
- <div class="card">
-  <h2>Meta geral do mês</h2>
-  <p id="dashGoalText" class="muted">Carregando meta...</p>
-  <div class="progress"><div id="dashGoalBar"></div></div>
- </div>
-
- <div class="actions">
-  <button class="btn" onclick="loadDashboard()">Atualizar painel</button>
- </div>
- <div id="dashMessage" class="message"></div>
+<div class="card admin-only">
+<h2>Ranking de consultores</h2>
+<div id="dashRanking"></div>
+</div>
 </section>
 
-<!-- CLIENTES -->
-<section id="clients" class="panel">
- <div class="card">
-  <h2 id="formTitle">Cadastrar cliente</h2>
-  <form id="contactForm" onsubmit="saveContact(event)">
-   <input type="hidden" id="contactId">
-   <div class="grid">
-    <div class="field"><label for="contactName">Nome do cliente *</label><input id="contactName" required placeholder="Nome completo"></div>
-    <div class="field"><label for="contactPhone">Telefone / WhatsApp</label><input id="contactPhone" placeholder="(00) 00000-0000"></div>
-    <div class="field"><label for="contactEmail">E-mail</label><input id="contactEmail" type="email" placeholder="cliente@email.com"></div>
-    <div class="field"><label for="contactNotes">Observações</label><input id="contactNotes" placeholder="Informações adicionais"></div>
-   </div>
-   <div class="actions">
-    <button class="btn" type="submit">Salvar cliente</button>
-    <button class="btn secondary" type="button" onclick="clearContactForm()">Limpar</button>
-   </div>
-   <div id="contactMessage" class="message"></div>
-  </form>
- </div>
+<section id="clients" class="panel admin-only">
+<div class="card">
+<h2>Cadastrar cliente</h2>
+<form id="contactForm" onsubmit="saveContact(event)">
+<input type="hidden" id="contactId">
+<div class="grid">
+<div class="field"><label>Nome *</label><input id="contactName" required></div>
+<div class="field"><label>Telefone / WhatsApp</label><input id="contactPhone"></div>
+<div class="field"><label>E-mail</label><input id="contactEmail" type="email"></div>
+<div class="field"><label>Observações</label><input id="contactNotes"></div>
+</div>
+<button class="btn">Salvar cliente</button>
+<button class="btn secondary" type="button" onclick="clearContact()">Limpar</button>
+<div id="contactMessage" class="message"></div>
+</form>
+</div>
 
- <div class="card">
-  <h2>Clientes cadastrados</h2>
-  <div class="field"><input id="contactSearch" placeholder="Pesquisar cliente..." oninput="renderContacts()"></div>
-  <div class="actions"><button class="btn secondary" onclick="exportContacts()">Exportar clientes CSV</button></div>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Observações</th><th>Ações</th></tr></thead>
-    <tbody id="contactsTable"><tr><td colspan="5">Carregando...</td></tr></tbody>
-   </table>
-  </div>
- </div>
+<div class="card">
+<h2>Clientes cadastrados</h2>
+<input id="contactSearch" placeholder="Pesquisar cliente" oninput="renderContacts()">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Observações</th><th>Ações</th></tr></thead>
+<tbody id="contactsTable"></tbody>
+</table>
+</div>
+<button class="btn secondary" onclick="exportCsv('/api/contacts/export','clientes.csv')">Exportar CSV</button>
+</div>
 </section>
 
-<!-- VENDAS -->
 <section id="sales" class="panel">
- <div class="metrics">
-  <div class="metric"><small>Total de vendas</small><strong id="salesCount">0</strong></div>
-  <div class="metric"><small>Vendas pagas</small><strong id="paidCount">0</strong></div>
-  <div class="metric"><small>Pendentes</small><strong id="pendingCount">0</strong></div>
-  <div class="metric"><small>Faturamento recebido</small><strong id="salesRevenue">R$ 0,00</strong></div>
- </div>
+<div class="metrics">
+<div class="metric"><small>Total de vendas</small><strong id="salesCount">0</strong></div>
+<div class="metric"><small>Pagas</small><strong id="paidCount">0</strong></div>
+<div class="metric"><small>Pendentes</small><strong id="pendingCount">0</strong></div>
+<div class="metric"><small>Faturamento pago</small><strong id="salesRevenue">R$ 0,00</strong></div>
+</div>
 
- <div class="card">
-  <h2 id="saleFormTitle">Cadastrar venda ou pedido</h2>
-  <form id="saleForm" onsubmit="saveSale(event)">
-   <input type="hidden" id="saleId">
-   <div class="grid">
-    <div class="field">
-     <label for="saleCustomer">Cliente *</label>
-     <input id="saleCustomer" list="customerOptions" required placeholder="Nome do cliente">
-     <datalist id="customerOptions"></datalist>
-    </div>
-    <div class="field"><label for="saleProduct">Produto ou serviço *</label><input id="saleProduct" required placeholder="O que foi vendido?"></div>
-    <div class="field"><label for="saleAmount">Valor (R$) *</label><input id="saleAmount" type="number" min="0" step="0.01" required placeholder="0,00"></div>
-    <div class="field">
-     <label for="saleStatus">Situação</label>
-     <select id="saleStatus">
-      <option value="Pendente">Pendente</option>
-      <option value="Pago">Pago</option>
-      <option value="Cancelado">Cancelado</option>
-     </select>
-    </div>
-    <div class="field">
-     <label for="saleConsultant">Consultor responsável</label>
-     <select id="saleConsultant" onchange="updateSaleCommission()"><option value="">Sem consultor</option></select>
-    </div>
-    <div class="field"><label for="saleCommission">Comissão (%)</label><input id="saleCommission" type="number" min="0" max="100" step="0.01" value="0"></div>
-   </div>
-   <div class="field"><label for="saleNotes">Observações</label><textarea id="saleNotes" placeholder="Detalhes da venda"></textarea></div>
-   <div class="actions">
-    <button class="btn" type="submit">Salvar venda</button>
-    <button class="btn secondary" type="button" onclick="clearSaleForm()">Limpar</button>
-   </div>
-   <div id="saleMessage" class="message"></div>
-  </form>
- </div>
+<div class="card">
+<h2 id="saleTitle">Cadastrar venda</h2>
+<form id="saleForm" onsubmit="saveSale(event)">
+<input type="hidden" id="saleId">
+<div class="grid">
+<div class="field">
+<label>Cliente *</label>
+<input id="saleCustomer" list="customerOptions" required>
+<datalist id="customerOptions"></datalist>
+</div>
+<div class="field"><label>Produto ou serviço *</label><input id="saleProduct" required></div>
+<div class="field"><label>Valor (R$) *</label><input id="saleAmount" type="number" min="0" step="0.01" required></div>
+<div class="field">
+<label>Situação</label>
+<select id="saleStatus">
+<option>Pendente</option>
+<option>Pago</option>
+<option>Cancelado</option>
+</select>
+</div>
+<div class="field admin-only">
+<label>Consultor responsável</label>
+<select id="saleConsultant"><option value="">Sem consultor</option></select>
+</div>
+<div class="field admin-only">
+<label>Comissão (%)</label>
+<input id="saleCommission" type="number" min="0" max="100" step="0.01" value="0">
+</div>
+</div>
+<div class="field"><label>Observações</label><textarea id="saleNotes"></textarea></div>
+<button class="btn">Salvar venda</button>
+<button type="button" class="btn secondary" onclick="clearSale()">Limpar</button>
+<div id="saleMessage" class="message"></div>
+</form>
+</div>
 
- <div class="card">
-  <h2>Histórico de vendas</h2>
-  <div class="field"><input id="saleSearch" placeholder="Pesquisar venda, cliente ou consultor..." oninput="renderSales()"></div>
-  <div class="actions"><button class="btn secondary" onclick="exportSales()">Exportar vendas CSV</button></div>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Status</th><th>Consultor</th><th>Comissão</th><th>Ações</th></tr></thead>
-    <tbody id="salesTable"><tr><td colspan="7">Carregando...</td></tr></tbody>
-   </table>
-  </div>
- </div>
+<div class="card">
+<h2>Histórico de vendas</h2>
+<input id="saleSearch" placeholder="Pesquisar venda" oninput="renderSales()">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Status</th><th>Consultor</th><th>Comissão</th><th>Ações</th></tr></thead>
+<tbody id="salesTable"></tbody>
+</table>
+</div>
+<button class="btn secondary admin-only" onclick="exportCsv('/api/sales/export','vendas.csv')">Exportar vendas CSV</button>
+</div>
 </section>
 
-<!-- FINANCEIRO -->
-<section id="finance" class="panel">
- <div class="card">
-  <h2>Painel financeiro</h2>
-  <div class="field" style="max-width:260px">
-   <label for="financeMonth">Mês de referência</label>
-   <input id="financeMonth" type="month" onchange="loadFinance();loadConsultantPerformance()">
-  </div>
- </div>
+<section id="finance" class="panel admin-only">
+<div class="card">
+<h2>Painel financeiro</h2>
+<label>Mês de referência</label>
+<input id="financeMonth" type="month" onchange="loadFinance();loadPerformance()">
+</div>
 
- <div class="metrics">
-  <div class="metric"><small>Faturamento recebido</small><strong id="finRevenue">R$ 0,00</strong></div>
-  <div class="metric"><small>Despesas</small><strong id="finExpenses">R$ 0,00</strong></div>
-  <div class="metric"><small>Comissões</small><strong id="finCommissions">R$ 0,00</strong></div>
-  <div class="metric"><small>Lucro estimado</small><strong id="finProfit">R$ 0,00</strong></div>
- </div>
- <div class="metrics">
-  <div class="metric"><small>Vendas pendentes</small><strong id="finPending">R$ 0,00</strong></div>
-  <div class="metric"><small>Vendas pagas</small><strong id="finPaidCount">0</strong></div>
- </div>
+<div class="metrics">
+<div class="metric"><small>Faturamento</small><strong id="finRevenue">R$ 0,00</strong></div>
+<div class="metric"><small>Despesas</small><strong id="finExpenses">R$ 0,00</strong></div>
+<div class="metric"><small>Comissões</small><strong id="finCommissions">R$ 0,00</strong></div>
+<div class="metric"><small>Lucro</small><strong id="finProfit">R$ 0,00</strong></div>
+</div>
 
- <div class="card">
-  <h2>Meta mensal geral</h2>
-  <form onsubmit="saveGoal(event)">
-   <div class="field"><label for="goalAmount">Meta de faturamento (R$)</label><input id="goalAmount" type="number" min="0" step="0.01" placeholder="Ex.: 10000"></div>
-   <button class="btn" type="submit">Salvar meta geral</button>
-   <div id="goalMessage" class="message"></div>
-  </form>
-  <p class="muted" id="goalProgressText">Defina uma meta para acompanhar seu progresso.</p>
-  <div class="progress"><div id="goalProgressBar"></div></div>
- </div>
+<div class="card">
+<h2>Meta mensal geral</h2>
+<form onsubmit="saveGoal(event)">
+<label>Meta (R$)</label>
+<input id="goalAmount" type="number" min="0" step="0.01">
+<button class="btn">Salvar meta geral</button>
+<div id="goalMessage" class="message"></div>
+</form>
+</div>
 
- <!-- NOVO: METAS INDIVIDUAIS -->
- <div class="card">
-  <h2>Metas individuais dos consultores</h2>
-  <p class="muted">Defina uma meta mensal para cada consultor. O sistema calcula automaticamente as vendas pagas, o que falta para alcançar a meta e a comissão acumulada.</p>
-  <div id="consultantGoalsList">
-   <p class="muted">Carregando desempenho dos consultores...</p>
-  </div>
-  <div id="consultantGoalsMessage" class="message"></div>
-  <div class="actions">
-   <button class="btn secondary" type="button" onclick="loadConsultantPerformance()">Atualizar metas individuais</button>
-  </div>
- </div>
+<div class="card">
+<h2>Metas individuais dos consultores</h2>
+<div id="performanceList"></div>
+</div>
 
- <div class="card">
-  <h2 id="expenseFormTitle">Cadastrar despesa</h2>
-  <form onsubmit="saveExpense(event)">
-   <input type="hidden" id="expenseId">
-   <div class="grid">
-    <div class="field"><label for="expenseDescription">Descrição *</label><input id="expenseDescription" required placeholder="Ex.: Internet, aluguel, material"></div>
-    <div class="field"><label for="expenseAmount">Valor (R$) *</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="0,00"></div>
-    <div class="field"><label for="expenseCategory">Categoria</label><input id="expenseCategory" placeholder="Ex.: Operacional, Marketing"></div>
-    <div class="field"><label for="expenseDate">Data da despesa *</label><input id="expenseDate" type="date" required></div>
-   </div>
-   <div class="field"><label for="expenseNotes">Observações</label><textarea id="expenseNotes" placeholder="Detalhes da despesa"></textarea></div>
-   <div class="actions">
-    <button class="btn" type="submit">Salvar despesa</button>
-    <button class="btn secondary" type="button" onclick="clearExpenseForm()">Limpar</button>
-   </div>
-   <div id="expenseMessage" class="message"></div>
-  </form>
- </div>
+<div class="card">
+<h2>Cadastrar despesa</h2>
+<form id="expenseForm" onsubmit="saveExpense(event)">
+<input id="expenseId" type="hidden">
+<div class="grid">
+<div class="field"><label>Descrição</label><input id="expenseDescription" required></div>
+<div class="field"><label>Valor</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required></div>
+<div class="field"><label>Categoria</label><input id="expenseCategory"></div>
+<div class="field"><label>Data</label><input id="expenseDate" type="date" required></div>
+</div>
+<label>Observações</label>
+<textarea id="expenseNotes"></textarea>
+<button class="btn">Salvar despesa</button>
+<div id="expenseMessage" class="message"></div>
+</form>
+</div>
 
- <div class="card">
-  <h2>Histórico de despesas</h2>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th><th>Ações</th></tr></thead>
-    <tbody id="expensesTable"><tr><td colspan="5">Carregando...</td></tr></tbody>
-   </table>
-  </div>
- </div>
+<div class="card">
+<h2>Histórico de despesas</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th><th>Ações</th></tr></thead>
+<tbody id="expensesTable"></tbody>
+</table>
+</div>
+</div>
 
- <div class="card">
-  <h2 id="consultantFormTitle">Cadastrar consultor</h2>
-  <form onsubmit="saveConsultant(event)">
-   <input type="hidden" id="consultantId">
-   <div class="grid">
-    <div class="field"><label for="consultantName">Nome do consultor *</label><input id="consultantName" required placeholder="Nome completo"></div>
-    <div class="field"><label for="consultantRate">Comissão padrão (%)</label><input id="consultantRate" type="number" min="0" max="100" step="0.01" value="0"></div>
-   </div>
-   <div class="actions">
-    <button class="btn" type="submit">Salvar consultor</button>
-    <button class="btn secondary" type="button" onclick="clearConsultantForm()">Limpar</button>
-   </div>
-   <div id="consultantMessage" class="message"></div>
-  </form>
- </div>
+<div class="card">
+<h2 id="consultantTitle">Cadastrar consultor</h2>
+<form id="consultantForm" onsubmit="saveConsultant(event)">
+<input id="consultantId" type="hidden">
+<div class="grid">
+<div class="field"><label>Nome *</label><input id="consultantName" required></div>
+<div class="field"><label>Comissão padrão (%)</label><input id="consultantRate" type="number" min="0" max="100" step="0.01" value="0"></div>
+<div class="field"><label>Usuário de acesso</label><input id="consultantUsername" autocomplete="off" placeholder="Login do consultor"></div>
+<div class="field"><label>Senha de acesso (mínimo 8 caracteres)</label><input id="consultantPassword" type="password" autocomplete="new-password"></div>
+</div>
+<p class="muted">Para criar ou trocar o acesso, preencha usuário e senha. Ao editar um consultor, deixe os dois campos vazios para manter a senha atual.</p>
+<button class="btn">Salvar consultor</button>
+<button type="button" class="btn secondary" onclick="clearConsultant()">Limpar</button>
+<div id="consultantMessage" class="message"></div>
+</form>
+</div>
 
- <div class="card">
-  <h2>Consultores cadastrados</h2>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Nome</th><th>Comissão padrão</th><th>Ações</th></tr></thead>
-    <tbody id="consultantsTable"><tr><td colspan="3">Carregando...</td></tr></tbody>
-   </table>
-  </div>
- </div>
+<div class="card">
+<h2>Consultores cadastrados</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Nome</th><th>Comissão</th><th>Login</th><th>Ações</th></tr></thead>
+<tbody id="consultantsTable"></tbody>
+</table>
+</div>
+</div>
 </section>
 
 </main>
@@ -371,636 +300,513 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 
 <script>
 let sessionToken=null;
-let contacts=[];
-let sales=[];
-let expenses=[];
-let consultants=[];
-let consultantPerformance=[];
+let user={role:'admin'};
+let contacts=[],sales=[],consultants=[],expenses=[],performance=[];
 
 const $=id=>document.getElementById(id);
-const money=value=>Number(value||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const localDate=()=>{
- const d=new Date();
- return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-};
-const currentMonth=()=>localDate().slice(0,7);
+const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const monthNow=()=>today().slice(0,7);
 
-function showMessage(id,message,type="good"){
- const el=$(id);
- el.textContent=message;
- el.className="message "+type;
+function msg(id,t,bad=false){
+  $(id).textContent=t;
+  $(id).className='message '+(bad?'bad':'good');
 }
 
-async function api(url,options={}){
- const headers={...(options.headers||{})};
- if(!(options.body instanceof FormData))headers["Content-Type"]="application/json";
- if(sessionToken)headers.Authorization="Bearer "+sessionToken;
- const response=await fetch(url,{...options,headers});
- const raw=await response.text();
- let data={};
- try{data=raw?JSON.parse(raw):{};}catch{data={message:raw};}
- if(!response.ok)throw new Error(data.error||data.message||"Erro na comunicação com o servidor.");
- return data;
+async function api(url,opt={}){
+  let h={...(opt.headers||{})};
+  if(!(opt.body instanceof FormData))h['Content-Type']='application/json';
+  if(sessionToken)h.Authorization='Bearer '+sessionToken;
+  let r=await fetch(url,{...opt,headers:h});
+  let raw=await r.text(),d={};
+  try{d=raw?JSON.parse(raw):{}}catch{d={message:raw}}
+  if(!r.ok)throw Error(d.error||d.message||'Erro no servidor.');
+  return d;
 }
 
 async function login(){
- const username=$("username").value.trim();
- const password=$("password").value;
- showMessage("loginMessage","Entrando...","");
- try{
-  const result=await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});
-  if(!result.token)throw new Error("O servidor não retornou o token de acesso.");
-  sessionToken=result.token;
-  $("loginScreen").classList.add("hidden");
-  $("appScreen").classList.remove("hidden");
-  $("password").value="";
-  await loadAll();
- }catch(error){showMessage("loginMessage",error.message,"bad");}
+  msg('loginMessage','Entrando...');
+  try{
+    let d=await api('/api/login',{
+      method:'POST',
+      body:JSON.stringify({
+        username:$('username').value.trim(),
+        password:$('password').value
+      })
+    });
+    sessionToken=d.token;
+    user={
+      role:d.role,
+      consultantId:d.consultantId,
+      consultantName:d.consultantName
+    };
+    $('loginScreen').classList.add('hidden');
+    $('appScreen').classList.remove('hidden');
+    $('password').value='';
+    applyRole();
+    await loadAll();
+  }catch(e){
+    msg('loginMessage',e.message,true);
+  }
+}
+
+function applyRole(){
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    el.classList.toggle('hidden',user.role!=='admin');
+  });
+  $('welcomeTitle').textContent=user.role==='admin'
+    ?'Painel de desempenho'
+    :'Olá, '+user.consultantName;
+  $('welcomeText').textContent=user.role==='admin'
+    ?'Acompanhe os resultados da operação.'
+    :'Aqui estão somente suas vendas, metas e comissões.';
 }
 
 async function logout(){
- try{await api("/api/logout",{method:"POST"});}catch{}
- sessionToken=null;
- $("appScreen").classList.add("hidden");
- $("loginScreen").classList.remove("hidden");
+  try{await api('/api/logout',{method:'POST'})}catch{}
+  sessionToken=null;
+  user={role:'admin'};
+  $('appScreen').classList.add('hidden');
+  $('loginScreen').classList.remove('hidden');
 }
 
-function showTab(tab,button){
- document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
- $(tab).classList.add("active");
- document.querySelectorAll("nav button[data-tab]").forEach(b=>b.classList.remove("active"));
- if(button)button.classList.add("active");
+function showTab(id,b){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  $(id).classList.add('active');
+  document.querySelectorAll('nav button[data-tab]').forEach(x=>x.classList.remove('active'));
+  if(b)b.classList.add('active');
 }
 
 async function loadAll(){
- try{
-  await Promise.all([loadContacts(),loadSales(),loadConsultants(),loadExpenses()]);
-  await Promise.all([loadFinance(),loadDashboard(),loadConsultantPerformance()]);
- }catch(error){alert("Não foi possível carregar os dados: "+error.message);}
+  try{
+    if(user.role==='admin'){
+      await Promise.all([loadContacts(),loadConsultants(),loadExpenses()]);
+    }
+    await loadSales();
+    await loadFinance();
+    if(user.role==='admin')await loadPerformance();
+    await loadDashboard();
+  }catch(e){
+    alert('Erro ao carregar: '+e.message);
+  }
 }
 
-/* CLIENTES */
+// CLIENTES
 async function loadContacts(){
- contacts=await api("/api/contacts");
- if(!Array.isArray(contacts))contacts=[];
- renderContacts();
- updateCustomerOptions();
+  contacts=await api('/api/contacts');
+  renderContacts();
+  $('customerOptions').innerHTML=contacts.map(c=>`<option value="${esc(c.name)}"></option>`).join('');
 }
 
 function renderContacts(){
- const q=$("contactSearch").value.toLowerCase();
- const filtered=contacts.filter(c=>[c.name,c.phone,c.email,c.notes].join(" ").toLowerCase().includes(q));
- $("contactsTable").innerHTML=filtered.length?filtered.map(c=>`
- <tr>
-  <td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email)}</td><td>${esc(c.notes)}</td>
-  <td>
-   <button class="btn secondary small" onclick="editContact(${Number(c.id)})">Editar</button>
-   <button class="btn danger small" onclick="deleteContact(${Number(c.id)})">Excluir</button>
-  </td>
- </tr>`).join(""):'<tr><td colspan="5">Nenhum cliente encontrado.</td></tr>';
+  let q=($('contactSearch').value||'').toLowerCase();
+  let a=contacts.filter(c=>[c.name,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q));
+  $('contactsTable').innerHTML=a.map(c=>`
+    <tr>
+      <td>${esc(c.name)}</td>
+      <td>${esc(c.phone)}</td>
+      <td>${esc(c.email)}</td>
+      <td>${esc(c.notes)}</td>
+      <td>
+        <button class="btn secondary small" onclick="editContact(${c.id})">Editar</button>
+        <button class="btn danger small" onclick="deleteContact(${c.id})">Excluir</button>
+      </td>
+    </tr>
+  `).join('')||'<tr><td colspan="5">Nenhum cliente.</td></tr>';
 }
 
-function updateCustomerOptions(){
- $("customerOptions").innerHTML=contacts.map(c=>`<option value="${esc(c.name)}"></option>`).join("");
-}
-
-async function saveContact(event){
- event.preventDefault();
- const id=$("contactId").value;
- const payload={
-  name:$("contactName").value.trim(),
-  phone:$("contactPhone").value.trim(),
-  email:$("contactEmail").value.trim(),
-  notes:$("contactNotes").value.trim()
- };
- try{
-  await api(id?"/api/contacts/"+id:"/api/contacts",{
-   method:id?"PUT":"POST",body:JSON.stringify(payload)
-  });
-  clearContactForm();
-  showMessage("contactMessage","Cliente salvo com sucesso!");
-  await loadContacts();
- }catch(error){showMessage("contactMessage",error.message,"bad");}
+async function saveContact(e){
+  e.preventDefault();
+  let id=$('contactId').value;
+  let p={
+    name:$('contactName').value.trim(),
+    phone:$('contactPhone').value,
+    email:$('contactEmail').value,
+    notes:$('contactNotes').value
+  };
+  try{
+    await api(id?'/api/contacts/'+id:'/api/contacts',{
+      method:id?'PUT':'POST',
+      body:JSON.stringify(p)
+    });
+    clearContact();
+    await loadContacts();
+    msg('contactMessage','Cliente salvo.');
+  }catch(x){
+    msg('contactMessage',x.message,true);
+  }
 }
 
 function editContact(id){
- const c=contacts.find(x=>Number(x.id)===Number(id));
- if(!c)return;
- $("contactId").value=c.id;
- $("contactName").value=c.name||"";
- $("contactPhone").value=c.phone||"";
- $("contactEmail").value=c.email||"";
- $("contactNotes").value=c.notes||"";
- $("formTitle").textContent="Editar cliente";
- window.scrollTo({top:0,behavior:"smooth"});
+  let c=contacts.find(x=>+x.id===+id);
+  $('contactId').value=c.id;
+  $('contactName').value=c.name;
+  $('contactPhone').value=c.phone;
+  $('contactEmail').value=c.email;
+  $('contactNotes').value=c.notes;
+  window.scrollTo(0,0);
 }
 
-function clearContactForm(){
- $("contactForm").reset();
- $("contactId").value="";
- $("formTitle").textContent="Cadastrar cliente";
+function clearContact(){
+  $('contactForm').reset();
+  $('contactId').value='';
 }
 
 async function deleteContact(id){
- if(!confirm("Deseja excluir este cliente?"))return;
- try{await api("/api/contacts/"+id,{method:"DELETE"});await loadContacts();}
- catch(error){alert(error.message);}
+  if(confirm('Excluir cliente?')){
+    try{
+      await api('/api/contacts/'+id,{method:'DELETE'});
+      await loadContacts();
+    }catch(e){alert(e.message)}
+  }
 }
 
-async function exportContacts(){
- try{
-  const response=await fetch("/api/contacts/export",{headers:{Authorization:"Bearer "+sessionToken}});
-  if(!response.ok)throw new Error("Não foi possível exportar os clientes.");
-  downloadBlob(await response.blob(),"clientes.csv");
- }catch(error){alert(error.message);}
-}
-
-/* VENDAS */
+// VENDAS
 async function loadSales(){
- sales=await api("/api/sales");
- if(!Array.isArray(sales))sales=[];
- renderSales();
- updateSalesMetrics();
+  sales=await api('/api/sales');
+  renderSales();
+  updateSalesMetrics();
 }
 
 function renderSales(){
- const q=$("saleSearch").value.toLowerCase();
- const filtered=sales.filter(s=>[s.customer_name,s.product,s.status,s.consultant_name,s.notes].join(" ").toLowerCase().includes(q));
- $("salesTable").innerHTML=filtered.length?filtered.map(s=>`
- <tr>
-  <td>${esc(s.customer_name)}</td>
-  <td>${esc(s.product)}</td>
-  <td>${money(s.amount)}</td>
-  <td><span class="tag ${s.status==="Pago"?"paid":s.status==="Cancelado"?"cancelled":"pending"}">${esc(s.status)}</span></td>
-  <td>${esc(s.consultant_name||"-")}</td>
-  <td>${Number(s.commission_rate||0).toLocaleString("pt-BR")}%</td>
-  <td>
-   <button class="btn secondary small" onclick="editSale(${Number(s.id)})">Editar</button>
-   <button class="btn danger small" onclick="deleteSale(${Number(s.id)})">Excluir</button>
-  </td>
- </tr>`).join(""):'<tr><td colspan="7">Nenhuma venda encontrada.</td></tr>';
+  let q=($('saleSearch').value||'').toLowerCase();
+  let a=sales.filter(s=>[s.customer_name,s.product,s.status,s.consultant_name].join(' ').toLowerCase().includes(q));
+  $('salesTable').innerHTML=a.map(s=>`
+    <tr>
+      <td>${esc(s.customer_name)}</td>
+      <td>${esc(s.product)}</td>
+      <td>${money(s.amount)}</td>
+      <td><span class="tag ${s.status==='Pago'?'paid':s.status==='Cancelado'?'cancelled':'pending'}">${esc(s.status)}</span></td>
+      <td>${esc(s.consultant_name||'-')}</td>
+      <td>${Number(s.commission_rate||0)}%</td>
+      <td>
+        <button class="btn secondary small" onclick="editSale(${s.id})">Editar</button>
+        ${user.role==='admin'?`<button class="btn danger small" onclick="deleteSale(${s.id})">Excluir</button>`:''}
+      </td>
+    </tr>
+  `).join('')||'<tr><td colspan="7">Nenhuma venda encontrada.</td></tr>';
 }
 
 function updateSalesMetrics(){
- $("salesCount").textContent=sales.length;
- $("paidCount").textContent=sales.filter(s=>s.status==="Pago").length;
- $("pendingCount").textContent=sales.filter(s=>s.status==="Pendente").length;
- $("salesRevenue").textContent=money(sales.filter(s=>s.status==="Pago").reduce((sum,s)=>sum+Number(s.amount||0),0));
+  $('salesCount').textContent=sales.length;
+  $('paidCount').textContent=sales.filter(s=>s.status==='Pago').length;
+  $('pendingCount').textContent=sales.filter(s=>s.status==='Pendente').length;
+  $('salesRevenue').textContent=money(sales.filter(s=>s.status==='Pago').reduce((a,s)=>a+Number(s.amount),0));
 }
 
-function updateSaleCommission(){
- const name=$("saleConsultant").value;
- const c=consultants.find(x=>x.name===name);
- if(c)$("saleCommission").value=Number(c.commission_rate||0);
+function clearSale(){
+  $('saleForm').reset();
+  $('saleId').value='';
+  $('saleTitle').textContent='Cadastrar venda';
 }
 
-async function saveSale(event){
- event.preventDefault();
- const id=$("saleId").value;
- const payload={
-  customer_name:$("saleCustomer").value.trim(),
-  product:$("saleProduct").value.trim(),
-  amount:Number($("saleAmount").value),
-  status:$("saleStatus").value,
-  notes:$("saleNotes").value.trim(),
-  consultant_name:$("saleConsultant").value,
-  commission_rate:Number($("saleCommission").value||0)
- };
- try{
-  await api(id?"/api/sales/"+id:"/api/sales",{
-   method:id?"PUT":"POST",body:JSON.stringify(payload)
-  });
-  clearSaleForm();
-  showMessage("saleMessage","Venda salva com sucesso!");
-  await Promise.all([loadSales(),loadFinance(),loadDashboard(),loadConsultantPerformance()]);
- }catch(error){showMessage("saleMessage",error.message,"bad");}
+async function saveSale(e){
+  e.preventDefault();
+  let id=$('saleId').value;
+  let p={
+    customer_name:$('saleCustomer').value.trim(),
+    product:$('saleProduct').value.trim(),
+    amount:Number($('saleAmount').value),
+    status:$('saleStatus').value,
+    notes:$('saleNotes').value
+  };
+  if(user.role==='admin'){
+    p.consultant_name=$('saleConsultant').value;
+    p.commission_rate=Number($('saleCommission').value||0);
+  }
+  try{
+    await api(id?'/api/sales/'+id:'/api/sales',{
+      method:id?'PUT':'POST',
+      body:JSON.stringify(p)
+    });
+    clearSale();
+    msg('saleMessage','Venda salva com sucesso.');
+    await loadAll();
+  }catch(x){
+    msg('saleMessage',x.message,true);
+  }
 }
 
 function editSale(id){
- const s=sales.find(x=>Number(x.id)===Number(id));
- if(!s)return;
- $("saleId").value=s.id;
- $("saleCustomer").value=s.customer_name||"";
- $("saleProduct").value=s.product||"";
- $("saleAmount").value=s.amount||0;
- $("saleStatus").value=s.status||"Pendente";
- $("saleNotes").value=s.notes||"";
- $("saleConsultant").value=s.consultant_name||"";
- $("saleCommission").value=Number(s.commission_rate||0);
- $("saleFormTitle").textContent="Editar venda";
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function clearSaleForm(){
- $("saleForm").reset();
- $("saleId").value="";
- $("saleCommission").value=0;
- $("saleFormTitle").textContent="Cadastrar venda ou pedido";
+  let s=sales.find(x=>+x.id===+id);
+  if(!s)return;
+  $('saleId').value=s.id;
+  $('saleCustomer').value=s.customer_name;
+  $('saleProduct').value=s.product;
+  $('saleAmount').value=s.amount;
+  $('saleStatus').value=s.status;
+  $('saleNotes').value=s.notes||'';
+  $('saleTitle').textContent='Editar venda';
+  if(user.role==='admin'){
+    $('saleConsultant').value=s.consultant_name||'';
+    $('saleCommission').value=s.commission_rate||0;
+  }
+  window.scrollTo(0,0);
 }
 
 async function deleteSale(id){
- if(!confirm("Deseja excluir esta venda?"))return;
- try{
-  await api("/api/sales/"+id,{method:"DELETE"});
-  await Promise.all([loadSales(),loadFinance(),loadDashboard(),loadConsultantPerformance()]);
- }catch(error){alert(error.message);}
+  if(confirm('Excluir esta venda?')){
+    try{
+      await api('/api/sales/'+id,{method:'DELETE'});
+      await loadAll();
+    }catch(e){alert(e.message)}
+  }
 }
 
-async function exportSales(){
- try{
-  const response=await fetch("/api/sales/export",{headers:{Authorization:"Bearer "+sessionToken}});
-  if(!response.ok)throw new Error("Não foi possível exportar as vendas.");
-  downloadBlob(await response.blob(),"vendas.csv");
- }catch(error){alert(error.message);}
-}
-
-/* CONSULTORES */
+// CONSULTORES E ACESSOS
 async function loadConsultants(){
- consultants=await api("/api/consultants");
- if(!Array.isArray(consultants))consultants=[];
- renderConsultants();
- updateConsultantOptions();
+  consultants=await api('/api/consultants');
+  $('saleConsultant').innerHTML='<option value="">Sem consultor</option>'+
+    consultants.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+  $('consultantsTable').innerHTML=consultants.map(c=>`
+    <tr>
+      <td>${esc(c.name)}</td>
+      <td>${Number(c.commission_rate)}%</td>
+      <td>${c.has_access?'Configurado ('+esc(c.username)+')':'Sem acesso'}</td>
+      <td>
+        <button class="btn secondary small" onclick="editConsultant(${c.id})">Editar/acesso</button>
+        <button class="btn danger small" onclick="deleteConsultant(${c.id})">Excluir</button>
+      </td>
+    </tr>
+  `).join('')||'<tr><td colspan="4">Nenhum consultor.</td></tr>';
 }
 
-function renderConsultants(){
- $("consultantsTable").innerHTML=consultants.length?consultants.map(c=>`
- <tr>
-  <td>${esc(c.name)}</td>
-  <td>${Number(c.commission_rate||0).toLocaleString("pt-BR")}%</td>
-  <td>
-   <button class="btn secondary small" onclick="editConsultant(${Number(c.id)})">Editar</button>
-   <button class="btn danger small" onclick="deleteConsultant(${Number(c.id)})">Excluir</button>
-  </td>
- </tr>`).join(""):'<tr><td colspan="3">Nenhum consultor cadastrado.</td></tr>';
-}
-
-function updateConsultantOptions(){
- const selected=$("saleConsultant").value;
- $("saleConsultant").innerHTML='<option value="">Sem consultor</option>'+
-  consultants.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
- if(consultants.some(c=>c.name===selected))$("saleConsultant").value=selected;
-}
-
-async function saveConsultant(event){
- event.preventDefault();
- const id=$("consultantId").value;
- const payload={
-  name:$("consultantName").value.trim(),
-  commission_rate:Number($("consultantRate").value||0)
- };
- try{
-  await api(id?"/api/consultants/"+id:"/api/consultants",{
-   method:id?"PUT":"POST",body:JSON.stringify(payload)
-  });
-  clearConsultantForm();
-  showMessage("consultantMessage","Consultor salvo com sucesso!");
-  await loadConsultants();
-  await loadConsultantPerformance();
-  await loadDashboard();
- }catch(error){showMessage("consultantMessage",error.message,"bad");}
+async function saveConsultant(e){
+  e.preventDefault();
+  let id=$('consultantId').value;
+  let p={
+    name:$('consultantName').value.trim(),
+    commission_rate:Number($('consultantRate').value||0)
+  };
+  try{
+    let c=await api(id?'/api/consultants/'+id:'/api/consultants',{
+      method:id?'PUT':'POST',
+      body:JSON.stringify(p)
+    });
+    id=id||c.id;
+    let un=$('consultantUsername').value.trim();
+    let pw=$('consultantPassword').value;
+    if(un||pw){
+      if(!un||!pw)throw Error('Preencha usuário e senha juntos.');
+      await api('/api/consultants/'+id+'/access',{
+        method:'PUT',
+        body:JSON.stringify({username:un,password:pw})
+      });
+    }
+    clearConsultant();
+    msg('consultantMessage','Consultor salvo.');
+    await loadConsultants();
+    await loadPerformance();
+  }catch(x){
+    msg('consultantMessage',x.message,true);
+  }
 }
 
 function editConsultant(id){
- const c=consultants.find(x=>Number(x.id)===Number(id));
- if(!c)return;
- $("consultantId").value=c.id;
- $("consultantName").value=c.name||"";
- $("consultantRate").value=Number(c.commission_rate||0);
- $("consultantFormTitle").textContent="Editar consultor";
+  let c=consultants.find(x=>+x.id===+id);
+  $('consultantId').value=c.id;
+  $('consultantName').value=c.name;
+  $('consultantRate').value=c.commission_rate;
+  $('consultantUsername').value=c.username||'';
+  $('consultantPassword').value='';
+  $('consultantTitle').textContent='Editar consultor e acesso';
+  window.scrollTo(0,0);
 }
 
-function clearConsultantForm(){
- $("consultantFormTitle").textContent="Cadastrar consultor";
- $("consultantId").value="";
- $("consultantName").value="";
- $("consultantRate").value=0;
+function clearConsultant(){
+  $('consultantForm').reset();
+  $('consultantId').value='';
+  $('consultantRate').value=0;
+  $('consultantTitle').textContent='Cadastrar consultor';
 }
 
 async function deleteConsultant(id){
- if(!confirm("Deseja excluir este consultor? As metas individuais dele também serão excluídas. As vendas antigas permanecerão no histórico."))return;
- try{
-  await api("/api/consultants/"+id,{method:"DELETE"});
-  await loadConsultants();
-  await loadConsultantPerformance();
-  await loadDashboard();
- }catch(error){alert(error.message);}
+  if(confirm('Excluir consultor e seu acesso?')){
+    try{
+      await api('/api/consultants/'+id,{method:'DELETE'});
+      await loadConsultants();
+      await loadPerformance();
+    }catch(e){alert(e.message)}
+  }
 }
 
-/* DESPESAS */
+// DESPESAS
 async function loadExpenses(){
- expenses=await api("/api/expenses");
- if(!Array.isArray(expenses))expenses=[];
- renderExpenses();
+  expenses=await api('/api/expenses');
+  $('expensesTable').innerHTML=expenses.map(x=>`
+    <tr>
+      <td>${esc(x.description)}</td>
+      <td>${esc(x.category)}</td>
+      <td>${String(x.expense_date).slice(0,10)}</td>
+      <td>${money(x.amount)}</td>
+      <td><button class="btn danger small" onclick="deleteExpense(${x.id})">Excluir</button></td>
+    </tr>
+  `).join('')||'<tr><td colspan="5">Nenhuma despesa.</td></tr>';
 }
 
-function renderExpenses(){
- $("expensesTable").innerHTML=expenses.length?expenses.map(e=>`
- <tr>
-  <td>${esc(e.description)}</td>
-  <td>${esc(e.category||"-")}</td>
-  <td>${esc(String(e.expense_date||"").slice(0,10))}</td>
-  <td>${money(e.amount)}</td>
-  <td>
-   <button class="btn secondary small" onclick="editExpense(${Number(e.id)})">Editar</button>
-   <button class="btn danger small" onclick="deleteExpense(${Number(e.id)})">Excluir</button>
-  </td>
- </tr>`).join(""):'<tr><td colspan="5">Nenhuma despesa cadastrada.</td></tr>';
-}
-
-async function saveExpense(event){
- event.preventDefault();
- const id=$("expenseId").value;
- const payload={
-  description:$("expenseDescription").value.trim(),
-  amount:Number($("expenseAmount").value),
-  category:$("expenseCategory").value.trim(),
-  expense_date:$("expenseDate").value,
-  notes:$("expenseNotes").value.trim()
- };
- try{
-  await api(id?"/api/expenses/"+id:"/api/expenses",{
-   method:id?"PUT":"POST",body:JSON.stringify(payload)
-  });
-  clearExpenseForm();
-  showMessage("expenseMessage","Despesa salva com sucesso!");
-  await loadExpenses();
-  await loadFinance();
-  await loadDashboard();
- }catch(error){showMessage("expenseMessage",error.message,"bad");}
-}
-
-function editExpense(id){
- const e=expenses.find(x=>Number(x.id)===Number(id));
- if(!e)return;
- $("expenseId").value=e.id;
- $("expenseDescription").value=e.description||"";
- $("expenseAmount").value=e.amount||0;
- $("expenseCategory").value=e.category||"";
- $("expenseDate").value=String(e.expense_date||"").slice(0,10);
- $("expenseNotes").value=e.notes||"";
- $("expenseFormTitle").textContent="Editar despesa";
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function clearExpenseForm(){
- $("expenseId").value="";
- $("expenseDescription").value="";
- $("expenseAmount").value="";
- $("expenseCategory").value="";
- $("expenseDate").value=localDate();
- $("expenseNotes").value="";
- $("expenseFormTitle").textContent="Cadastrar despesa";
+async function saveExpense(e){
+  e.preventDefault();
+  let id=$('expenseId').value;
+  let p={
+    description:$('expenseDescription').value,
+    amount:Number($('expenseAmount').value),
+    category:$('expenseCategory').value,
+    expense_date:$('expenseDate').value,
+    notes:$('expenseNotes').value
+  };
+  try{
+    await api(id?'/api/expenses/'+id:'/api/expenses',{
+      method:id?'PUT':'POST',
+      body:JSON.stringify(p)
+    });
+    $('expenseId').value='';
+    $('expenseForm').reset();
+    msg('expenseMessage','Despesa salva.');
+    await loadExpenses();
+    await loadFinance();
+  }catch(x){
+    msg('expenseMessage',x.message,true);
+  }
 }
 
 async function deleteExpense(id){
- if(!confirm("Deseja excluir esta despesa?"))return;
- try{
-  await api("/api/expenses/"+id,{method:"DELETE"});
-  await loadExpenses();
-  await loadFinance();
-  await loadDashboard();
- }catch(error){alert(error.message);}
+  if(confirm('Excluir despesa?')){
+    try{
+      await api('/api/expenses/'+id,{method:'DELETE'});
+      await loadExpenses();
+      await loadFinance();
+    }catch(e){alert(e.message)}
+  }
 }
 
-/* FINANCEIRO E META GERAL */
+// FINANCEIRO E METAS
 async function loadFinance(){
- const month=$("financeMonth").value||currentMonth();
- try{
-  const data=await api("/api/finance/summary?month="+encodeURIComponent(month));
-  $("finRevenue").textContent=money(data.revenue);
-  $("finExpenses").textContent=money(data.expenses);
-  $("finCommissions").textContent=money(data.commissions);
-  $("finProfit").textContent=money(data.profit);
-  $("finPending").textContent=money(data.pending);
-  $("finPaidCount").textContent=data.paid_count??0;
-  $("goalAmount").value=data.target??"";
-  const target=Number(data.target||0);
-  const revenue=Number(data.revenue||0);
-  const progress=target>0?Math.min(100,(revenue/target)*100):0;
-  $("goalProgressBar").style.width=progress+"%";
-  $("goalProgressText").textContent=target>0?
-   `${money(revenue)} de ${money(target)} alcançados — ${progress.toFixed(1).replace(".",",")}% da meta.`:
-   "Defina uma meta para acompanhar seu progresso.";
- }catch(error){showMessage("goalMessage","Erro ao carregar o financeiro: "+error.message,"bad");}
+  let m=$('financeMonth').value||monthNow();
+  try{
+    let d=await api('/api/finance/summary?month='+m);
+    $('finRevenue').textContent=money(d.revenue);
+    $('finExpenses').textContent=money(d.expenses);
+    $('finCommissions').textContent=money(d.commissions);
+    $('finProfit').textContent=money(d.profit);
+    $('goalAmount').value=d.target||0;
+  }catch(e){
+    msg('goalMessage',e.message,true);
+  }
 }
 
-async function saveGoal(event){
- event.preventDefault();
- const payload={
-  month:$("financeMonth").value||currentMonth(),
-  target_amount:Number($("goalAmount").value||0)
- };
- try{
-  await api("/api/goals",{method:"PUT",body:JSON.stringify(payload)});
-  showMessage("goalMessage","Meta geral salva com sucesso!");
-  await loadFinance();
-  await loadDashboard();
- }catch(error){showMessage("goalMessage",error.message,"bad");}
+async function saveGoal(e){
+  e.preventDefault();
+  try{
+    await api('/api/goals',{
+      method:'PUT',
+      body:JSON.stringify({
+        month:$('financeMonth').value||monthNow(),
+        target_amount:Number($('goalAmount').value)
+      })
+    });
+    msg('goalMessage','Meta geral salva.');
+    await loadFinance();
+    await loadDashboard();
+  }catch(x){
+    msg('goalMessage',x.message,true);
+  }
 }
 
-/* NOVO: METAS INDIVIDUAIS */
-async function loadConsultantPerformance(){
- if(!sessionToken)return;
- const month=$("financeMonth").value||currentMonth();
- $("consultantGoalsList").innerHTML='<p class="muted">Carregando desempenho...</p>';
-
- try{
-  consultantPerformance=await api(
-   "/api/consultant-goals/performance?month="+encodeURIComponent(month)
-  );
-  if(!Array.isArray(consultantPerformance))consultantPerformance=[];
-  renderConsultantPerformance();
- }catch(error){
-  $("consultantGoalsList").innerHTML='<p class="bad">Não foi possível carregar as metas individuais: '+esc(error.message)+'</p>';
- }
-}
-
-function renderConsultantPerformance(){
- if(!consultantPerformance.length){
-  $("consultantGoalsList").innerHTML='<p class="muted">Cadastre um consultor para começar a definir metas individuais.</p>';
-  return;
- }
-
- $("consultantGoalsList").innerHTML=consultantPerformance.map(c=>{
-  const target=Number(c.target_amount||0);
-  const sold=Number(c.sales_amount||0);
-  const remaining=Number(c.remaining||0);
-  const progress=Number(c.progress||0);
-  const commission=Number(c.commissions||0);
-
-  return `
-   <div class="consultant-goal-card">
-    <div class="consultant-goal-head">
-     <strong>${esc(c.consultant_name)}</strong>
-     <span class="tag ${target>0&&progress>=100?"paid":"pending"}">${target>0?progress.toFixed(1).replace(".",",")+"% da meta":"Meta não definida"}</span>
+async function loadPerformance(){
+  if(user.role!=='admin')return;
+  performance=await api('/api/consultant-goals/performance?month='+($('financeMonth').value||monthNow()));
+  $('performanceList').innerHTML=performance.map(c=>`
+    <div class="goal-card">
+      <h3>${esc(c.consultant_name)}</h3>
+      <div class="goal-stats">
+        <div><small>Vendido</small><strong>${money(c.sales_amount)}</strong></div>
+        <div><small>Falta</small><strong>${money(c.remaining)}</strong></div>
+        <div><small>Comissão</small><strong>${money(c.commissions)}</strong></div>
+      </div>
+      <div class="progress"><div style="width:${c.progress}%"></div></div>
+      <form onsubmit="saveConsultantGoal(event,${c.consultant_id})">
+        <label>Meta mensal (R$)</label>
+        <input name="target" type="number" min="0" step="0.01" value="${Number(c.target_amount)}" required>
+        <button class="btn">Salvar meta</button>
+      </form>
     </div>
-
-    <div class="consultant-goal-stats">
-     <div><small>Vendido no mês</small><strong>${money(sold)}</strong></div>
-     <div><small>Falta para a meta</small><strong>${target>0?money(remaining):"—"}</strong></div>
-     <div><small>Comissão acumulada</small><strong>${money(commission)}</strong></div>
-    </div>
-
-    <div class="progress"><div style="width:${progress}%"></div></div>
-    <p class="muted">${Number(c.paid_count||0)} venda(s) paga(s) neste mês. Meta: ${target>0?money(target):"não definida"}.</p>
-
-    <form class="goal-edit" onsubmit="saveConsultantGoal(event,${Number(c.consultant_id)})">
-     <div class="field">
-      <label>Meta mensal deste consultor (R$)</label>
-      <input type="number" min="0" step="0.01" name="target_amount" value="${target}" placeholder="Ex.: 5000" required>
-     </div>
-     <button class="btn" type="submit">Salvar meta</button>
-    </form>
-   </div>
-  `;
- }).join("");
+  `).join('')||'<p class="muted">Cadastre consultores para definir metas.</p>';
 }
 
-async function saveConsultantGoal(event,consultantId){
- event.preventDefault();
- const input=event.currentTarget.elements.target_amount;
- const target=Number(input.value);
- const month=$("financeMonth").value||currentMonth();
-
- if(!Number.isFinite(target)||target<0){
-  showMessage("consultantGoalsMessage","Informe um valor válido.","bad");
-  return;
- }
-
- try{
-  await api("/api/consultant-goals",{
-   method:"PUT",
-   body:JSON.stringify({
-    consultant_id:consultantId,
-    month,
-    target_amount:target
-   })
-  });
-  showMessage("consultantGoalsMessage","Meta individual salva com sucesso!");
-  await loadConsultantPerformance();
- }catch(error){
-  showMessage("consultantGoalsMessage",error.message,"bad");
- }
-}
-
-/* PAINEL DE DESEMPENHO */
-function monthKey(date){
- return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
-}
-
-function monthLabel(key){
- const parts=key.split("-");
- const date=new Date(Number(parts[0]),Number(parts[1])-1,1);
- return date.toLocaleDateString("pt-BR",{month:"short"}).replace(".","");
-}
-
-function getSaleDate(s){
- const value=s.created_at||s.createdAt;
- if(!value)return null;
- const date=new Date(value);
- return Number.isNaN(date.getTime())?null:date;
+async function saveConsultantGoal(e,id){
+  e.preventDefault();
+  try{
+    await api('/api/consultant-goals',{
+      method:'PUT',
+      body:JSON.stringify({
+        consultant_id:id,
+        month:$('financeMonth').value||monthNow(),
+        target_amount:Number(e.currentTarget.elements.target.value)
+      })
+    });
+    await loadPerformance();
+  }catch(x){alert(x.message)}
 }
 
 async function loadDashboard(){
- if(!sessionToken)return;
- try{
-  const now=new Date();
-  const months=[];
-  for(let i=5;i>=0;i--){
-   const date=new Date(now.getFullYear(),now.getMonth()-i,1);
-   const key=monthKey(date);
-   months.push({key,label:monthLabel(key),total:0});
+  try{
+    let d=await api('/api/finance/summary?month='+monthNow());
+    let paid=sales.filter(s=>s.status==='Pago');
+    let rev=paid.reduce((a,s)=>a+Number(s.amount),0);
+
+    $('dashRevenue').textContent=money(rev);
+    $('dashSales').textContent=sales.length;
+    $('dashCommission').textContent=money(
+      user.role==='consultant'
+        ?d.commissions
+        :paid.reduce((a,s)=>a+Number(s.amount)*Number(s.commission_rate||0)/100,0)
+    );
+    $('dashGoal').textContent=money(d.target);
+
+    let pct=Number(d.progress||0);
+    $('dashGoalText').textContent=`${money(d.revenue)} de ${money(d.target)} — ${pct.toFixed(1)}% da meta.`;
+    $('dashGoalBar').style.width=pct+'%';
+
+    $('dashStatus').textContent=
+      `Pagas: ${paid.length} | Pendentes: ${sales.filter(s=>s.status==='Pendente').length} | Canceladas: ${sales.filter(s=>s.status==='Cancelado').length}`;
+
+    if(user.role==='admin'){
+      let rank={};
+      paid.forEach(s=>{
+        let n=s.consultant_name||'Sem consultor';
+        rank[n]=(rank[n]||0)+Number(s.amount);
+      });
+      $('dashRanking').innerHTML=Object.entries(rank)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([n,v],i)=>`<p>${i+1}º ${esc(n)} — ${money(v)}</p>`)
+        .join('')||'Sem vendas pagas.';
+    }
+  }catch(e){
+    console.error(e);
   }
-
-  const paid=sales.filter(s=>s.status==="Pago");
-  const revenue=paid.reduce((sum,s)=>sum+Number(s.amount||0),0);
-  const average=paid.length?revenue/paid.length:0;
-
-  $("dashRevenue").textContent=money(revenue);
-  $("dashSales").textContent=sales.length;
-  $("dashAverage").textContent=money(average);
-
-  paid.forEach(s=>{
-   const date=getSaleDate(s);
-   if(!date)return;
-   const month=months.find(m=>m.key===monthKey(date));
-   if(month)month.total+=Number(s.amount||0);
-  });
-
-  const maximum=Math.max(...months.map(m=>m.total),1);
-  $("dashChart").innerHTML=months.map(m=>{
-   const height=m.total>0?Math.max(5,(m.total/maximum)*135):3;
-   return `<div class="dashboard-month">
-    <div class="dashboard-value">${m.total>0?money(m.total):"—"}</div>
-    <div class="dashboard-bar" style="height:${height}px"></div>
-    <small>${esc(m.label)}</small>
-   </div>`;
-  }).join("");
-
-  const ranking={};
-  paid.forEach(s=>{
-   const name=(s.consultant_name||"Sem consultor").trim()||"Sem consultor";
-   ranking[name]=(ranking[name]||0)+Number(s.amount||0);
-  });
-
-  const ranked=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
-  const highest=ranked.length?ranked[0][1]:1;
-
-  $("dashRanking").innerHTML=ranked.length?
-   ranked.map(([name,total],index)=>`
-    <div class="dashboard-row">
-     <div class="dashboard-row-top"><strong>${index+1}º ${esc(name)}</strong><strong>${money(total)}</strong></div>
-     <div class="dashboard-track"><div class="dashboard-fill" style="width:${(total/highest)*100}%"></div></div>
-    </div>`).join("")
-   :'<p class="muted">Ainda não existem vendas pagas para montar o ranking.</p>';
-
-  const paidCount=sales.filter(s=>s.status==="Pago").length;
-  const pendingCount=sales.filter(s=>s.status==="Pendente").length;
-  const cancelledCount=sales.filter(s=>s.status==="Cancelado").length;
-
-  $("dashStatuses").innerHTML=`
-   <span class="paid">Pagas: ${paidCount}</span>
-   <span class="pending">Pendentes: ${pendingCount}</span>
-   <span class="cancelled">Canceladas: ${cancelledCount}</span>
-  `;
-
-  const finance=await api("/api/finance/summary?month="+encodeURIComponent(currentMonth()));
-  $("dashProfit").textContent=money(finance.profit);
-
-  const target=Number(finance.target||0);
-  const monthRevenue=Number(finance.revenue||0);
-  const progress=target>0?Math.min(100,monthRevenue/target*100):0;
-
-  $("dashGoalText").textContent=target>0?
-   `${money(monthRevenue)} de ${money(target)} — ${progress.toFixed(1).replace(".",",")}% da meta mensal.`:
-   "Você ainda não definiu uma meta para este mês.";
-
-  $("dashGoalBar").style.width=progress+"%";
-  $("dashMessage").textContent="Painel atualizado com sucesso.";
- }catch(error){
-  $("dashMessage").textContent="Erro ao atualizar painel: "+error.message;
- }
 }
 
-/* EXPORTAÇÃO */
-function downloadBlob(blob,filename){
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;
- a.download=filename;
- document.body.appendChild(a);
- a.click();
- a.remove();
- URL.revokeObjectURL(url);
+async function exportCsv(url,name){
+  try{
+    let r=await fetch(url,{
+      headers:{Authorization:'Bearer '+sessionToken}
+    });
+    if(!r.ok)throw Error('Falha ao exportar.');
+    let b=URL.createObjectURL(await r.blob());
+    let a=document.createElement('a');
+    a.href=b;
+    a.download=name;
+    a.click();
+    URL.revokeObjectURL(b);
+  }catch(e){alert(e.message)}
 }
 
-$("password").addEventListener("keydown",e=>{
- if(e.key==="Enter")login();
+$('password').addEventListener('keydown',e=>{
+  if(e.key==='Enter')login();
 });
-
-$("financeMonth").value=currentMonth();
-$("expenseDate").value=localDate();
+$('financeMonth').value=monthNow();
+$('expenseDate').value=today();
 </script>
 </body>
 </html>
