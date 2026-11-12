@@ -55,6 +55,23 @@ th{color:#64748b;background:#f8fafc}
 .login-wrap .card{padding:24px}
 .login-wrap h2{font-size:22px}
 footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
+
+/* PAINEL DE DESEMPENHO */
+.dashboard-chart{display:flex;align-items:flex-end;gap:10px;height:190px;padding:15px 5px 0;border-bottom:1px solid #e2e8f0}
+.dashboard-month{flex:1;min-width:0;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}
+.dashboard-bar{width:min(100%,38px);min-height:3px;background:#2563eb;border-radius:6px 6px 0 0}
+.dashboard-month small{font-size:10px;color:#64748b}
+.dashboard-value{font-size:10px;color:#475569;overflow-wrap:anywhere}
+.dashboard-row{margin:13px 0}
+.dashboard-row-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
+.dashboard-track{height:10px;background:#e8edf5;border-radius:20px;overflow:hidden}
+.dashboard-fill{height:100%;border-radius:20px;background:#2563eb}
+.dashboard-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.dashboard-status span{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:bold}
+.dashboard-status .paid{background:#dcfce7;color:#166534}
+.dashboard-status .pending{background:#fef3c7;color:#92400e}
+.dashboard-status .cancelled{background:#fee2e2;color:#991b1b}
+
 @media(max-width:760px){
  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
  .grid{grid-template-columns:1fr}
@@ -63,7 +80,14 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
  nav{position:sticky;top:0;z-index:5}
  nav button{flex:1}
 }
-@media(max-width:380px){.metrics{grid-template-columns:1fr 1fr}.metric strong{font-size:18px}}
+@media(max-width:500px){
+ .dashboard-chart{gap:4px}
+ .dashboard-value{font-size:9px}
+}
+@media(max-width:380px){
+ .metrics{grid-template-columns:1fr 1fr}
+ .metric strong{font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -91,15 +115,76 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
 
 <div id="appScreen" class="hidden">
 <nav>
- <button class="active" data-tab="clients" onclick="showTab('clients',this)">Clientes</button>
+ <button class="active" data-tab="dashboard" onclick="showTab('dashboard',this)">Painel</button>
+ <button data-tab="clients" onclick="showTab('clients',this)">Clientes</button>
  <button data-tab="sales" onclick="showTab('sales',this)">Vendas</button>
  <button data-tab="finance" onclick="showTab('finance',this)">Financeiro</button>
  <button class="secondary" onclick="logout()">Sair</button>
 </nav>
 
 <main>
+
+<!-- PAINEL DE DESEMPENHO -->
+<section id="dashboard" class="panel active">
+ <div class="card">
+  <h2>Painel de desempenho</h2>
+  <p class="muted">Acompanhe os resultados da sua operação.</p>
+ </div>
+
+ <div class="metrics">
+  <div class="metric">
+   <small>Faturamento recebido</small>
+   <strong id="dashRevenue">R$ 0,00</strong>
+  </div>
+  <div class="metric">
+   <small>Vendas registradas</small>
+   <strong id="dashSales">0</strong>
+  </div>
+  <div class="metric">
+   <small>Ticket médio pago</small>
+   <strong id="dashAverage">R$ 0,00</strong>
+  </div>
+  <div class="metric">
+   <small>Lucro estimado do mês</small>
+   <strong id="dashProfit">R$ 0,00</strong>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2>Faturamento dos últimos 6 meses</h2>
+  <p class="muted">Considera vendas com situação Pago.</p>
+  <div id="dashChart" class="dashboard-chart"></div>
+ </div>
+
+ <div class="card">
+  <h2>Ranking de consultores</h2>
+  <p class="muted">Classificação pelo valor das vendas pagas.</p>
+  <div id="dashRanking">
+   <p class="muted">Carregando ranking...</p>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2>Situação das vendas</h2>
+  <div id="dashStatuses" class="dashboard-status"></div>
+ </div>
+
+ <div class="card">
+  <h2>Meta do mês</h2>
+  <p id="dashGoalText" class="muted">Carregando meta...</p>
+  <div class="progress">
+   <div id="dashGoalBar"></div>
+  </div>
+ </div>
+
+ <div class="actions">
+  <button class="btn" onclick="loadDashboard()">Atualizar painel</button>
+ </div>
+ <div id="dashMessage" class="message"></div>
+</section>
+
 <!-- CLIENTES -->
-<section id="clients" class="panel active">
+<section id="clients" class="panel">
  <div class="card">
   <h2 id="formTitle">Cadastrar cliente</h2>
   <form id="contactForm" onsubmit="saveContact(event)">
@@ -333,6 +418,7 @@ footer{text-align:center;color:#94a3b8;font-size:12px;padding:20px}
   </div>
  </div>
 </section>
+
 </main>
 </div>
 
@@ -404,13 +490,14 @@ function showTab(tab,button){
  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
  $(tab).classList.add("active");
  document.querySelectorAll("nav button[data-tab]").forEach(b=>b.classList.remove("active"));
- if(button) button.classList.add("active");
+ if(button)button.classList.add("active");
 }
 
 async function loadAll(){
  try{
   await Promise.all([loadContacts(),loadSales(),loadConsultants(),loadExpenses()]);
   await loadFinance();
+  await loadDashboard();
  }catch(error){
   alert("Não foi possível carregar os dados: "+error.message);
  }
@@ -419,7 +506,7 @@ async function loadAll(){
 /* CLIENTES */
 async function loadContacts(){
  contacts=await api("/api/contacts");
- if(!Array.isArray(contacts)) contacts=[];
+ if(!Array.isArray(contacts))contacts=[];
  renderContacts();
  updateCustomerOptions();
 }
@@ -551,6 +638,7 @@ async function saveSale(event){
   showMessage("saleMessage","Venda salva com sucesso!");
   await loadSales();
   await loadFinance();
+  await loadDashboard();
  }catch(error){showMessage("saleMessage",error.message,"bad");}
 }
 
@@ -578,8 +666,12 @@ function clearSaleForm(){
 
 async function deleteSale(id){
  if(!confirm("Deseja excluir esta venda?"))return;
- try{await api("/api/sales/"+id,{method:"DELETE"});await loadSales();await loadFinance();}
- catch(error){alert(error.message);}
+ try{
+  await api("/api/sales/"+id,{method:"DELETE"});
+  await loadSales();
+  await loadFinance();
+  await loadDashboard();
+ }catch(error){alert(error.message);}
 }
 
 async function exportSales(){
@@ -695,6 +787,7 @@ async function saveExpense(event){
   showMessage("expenseMessage","Despesa salva com sucesso!");
   await loadExpenses();
   await loadFinance();
+  await loadDashboard();
  }catch(error){showMessage("expenseMessage",error.message,"bad");}
 }
 
@@ -723,8 +816,12 @@ function clearExpenseForm(){
 
 async function deleteExpense(id){
  if(!confirm("Deseja excluir esta despesa?"))return;
- try{await api("/api/expenses/"+id,{method:"DELETE"});await loadExpenses();await loadFinance();}
- catch(error){alert(error.message);}
+ try{
+  await api("/api/expenses/"+id,{method:"DELETE"});
+  await loadExpenses();
+  await loadFinance();
+  await loadDashboard();
+ }catch(error){alert(error.message);}
 }
 
 /* METAS E RESUMO FINANCEIRO */
@@ -761,18 +858,141 @@ async function saveGoal(event){
   await api("/api/goals",{method:"PUT",body:JSON.stringify(payload)});
   showMessage("goalMessage","Meta salva com sucesso!");
   await loadFinance();
+  await loadDashboard();
  }catch(error){showMessage("goalMessage",error.message,"bad");}
 }
 
+/* PAINEL DE DESEMPENHO */
+function monthKey(date){
+ return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
+}
+
+function monthLabel(key){
+ const parts=key.split("-");
+ const date=new Date(Number(parts[0]),Number(parts[1])-1,1);
+ return date.toLocaleDateString("pt-BR",{month:"short"}).replace(".","");
+}
+
+function getSaleDate(s){
+ const value=s.created_at||s.createdAt;
+ if(!value)return null;
+ const date=new Date(value);
+ return Number.isNaN(date.getTime())?null:date;
+}
+
+async function loadDashboard(){
+ if(!sessionToken)return;
+
+ try{
+  const now=new Date();
+  const months=[];
+
+  for(let i=5;i>=0;i--){
+   const date=new Date(now.getFullYear(),now.getMonth()-i,1);
+   const key=monthKey(date);
+   months.push({key,label:monthLabel(key),total:0});
+  }
+
+  const paid=sales.filter(s=>s.status==="Pago");
+  const revenue=paid.reduce((sum,s)=>sum+Number(s.amount||0),0);
+  const average=paid.length?revenue/paid.length:0;
+
+  $("dashRevenue").textContent=money(revenue);
+  $("dashSales").textContent=sales.length;
+  $("dashAverage").textContent=money(average);
+
+  paid.forEach(s=>{
+   const date=getSaleDate(s);
+   if(!date)return;
+   const key=monthKey(date);
+   const month=months.find(m=>m.key===key);
+   if(month)month.total+=Number(s.amount||0);
+  });
+
+  const maximum=Math.max(...months.map(m=>m.total),1);
+
+  $("dashChart").innerHTML=months.map(m=>{
+   const height=m.total>0?Math.max(5,(m.total/maximum)*135):3;
+   return `
+    <div class="dashboard-month">
+     <div class="dashboard-value">${m.total>0?money(m.total):"—"}</div>
+     <div class="dashboard-bar" style="height:${height}px"></div>
+     <small>${esc(m.label)}</small>
+    </div>
+   `;
+  }).join("");
+
+  const ranking={};
+
+  paid.forEach(s=>{
+   const name=(s.consultant_name||"Sem consultor").trim()||"Sem consultor";
+   ranking[name]=(ranking[name]||0)+Number(s.amount||0);
+  });
+
+  const ranked=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
+  const highest=ranked.length?ranked[0][1]:1;
+
+  $("dashRanking").innerHTML=ranked.length?
+   ranked.map(([name,total],index)=>`
+    <div class="dashboard-row">
+     <div class="dashboard-row-top">
+      <strong>${index+1}º ${esc(name)}</strong>
+      <strong>${money(total)}</strong>
+     </div>
+     <div class="dashboard-track">
+      <div class="dashboard-fill" style="width:${(total/highest)*100}%"></div>
+     </div>
+    </div>
+   `).join("")
+   :'<p class="muted">Ainda não existem vendas pagas para montar o ranking.</p>';
+
+  const paidCount=sales.filter(s=>s.status==="Pago").length;
+  const pendingCount=sales.filter(s=>s.status==="Pendente").length;
+  const cancelledCount=sales.filter(s=>s.status==="Cancelado").length;
+
+  $("dashStatuses").innerHTML=`
+   <span class="paid">Pagas: ${paidCount}</span>
+   <span class="pending">Pendentes: ${pendingCount}</span>
+   <span class="cancelled">Canceladas: ${cancelledCount}</span>
+  `;
+
+  const month=currentMonth();
+  const finance=await api("/api/finance/summary?month="+encodeURIComponent(month));
+
+  $("dashProfit").textContent=money(finance.profit);
+
+  const target=Number(finance.target||0);
+  const monthRevenue=Number(finance.revenue||0);
+  const progress=target>0?Math.min(100,monthRevenue/target*100):0;
+
+  $("dashGoalText").textContent=target>0?
+   `${money(monthRevenue)} de ${money(target)} — ${progress.toFixed(1).replace(".",",")}% da meta mensal.`:
+   "Você ainda não definiu uma meta para este mês.";
+
+  $("dashGoalBar").style.width=progress+"%";
+  $("dashMessage").textContent="Painel atualizado com sucesso.";
+
+ }catch(error){
+  $("dashMessage").textContent="Erro ao atualizar painel: "+error.message;
+ }
+}
+
+/* EXPORTAÇÃO */
 function downloadBlob(blob,filename){
  const url=URL.createObjectURL(blob);
  const a=document.createElement("a");
- a.href=url;a.download=filename;
- document.body.appendChild(a);a.click();a.remove();
+ a.href=url;
+ a.download=filename;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
  URL.revokeObjectURL(url);
 }
 
-$("password").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
+$("password").addEventListener("keydown",e=>{
+ if(e.key==="Enter")login();
+});
+
 $("financeMonth").value=currentMonth();
 $("expenseDate").value=localDate();
 </script>
