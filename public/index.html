@@ -5,12 +5,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Central de Vendas</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f9;color:#202938;font-family:Arial,sans-serif}
 header{background:#17243a;color:white;padding:20px}
-header h1{margin:0;font-size:22px}
-main{max-width:1000px;margin:25px auto;padding:15px}
+header h1{margin:0;font-size:23px}
+header small{color:#cbd5e1}
+main{max-width:1100px;margin:25px auto;padding:15px}
 .card{background:white;border-radius:13px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0000000c}
 input,select,textarea,button{font:inherit;padding:12px;border:1px solid #dce1e9;border-radius:8px;width:100%;margin:6px 0}
 button{background:#2463eb;color:white;border:0;font-weight:bold;cursor:pointer}
@@ -18,21 +20,33 @@ button.secondary{background:#e9eef8;color:#24344e}
 button.danger{background:#c63d49}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat strong{display:block;font-size:26px;margin-top:8px}
-.contact{border:1px solid #e6e9ef;padding:14px;border-radius:10px;margin:10px 0}
-.contact h3{margin:0 0 8px}
-small{color:#64748b}
-.hidden{display:none}
+.stat strong{display:block;font-size:25px;margin-top:9px}
+.hidden{display:none!important}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions button{width:auto}
-@media(max-width:600px){.row,.stats{grid-template-columns:1fr}}
+.tabs{display:flex;gap:10px;margin-bottom:18px}
+.tabs button{margin:0}
+.tabs button.active{background:#17243a}
+.contact{border:1px solid #e6e9ef;padding:14px;border-radius:10px;margin:10px 0}
+.contact h3{margin:0 0 8px}
+.muted{color:#64748b;font-size:13px}
+.money{font-size:20px;font-weight:bold;color:#167548}
+.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#e9eef8;font-size:12px;font-weight:bold}
+.message{min-height:20px;font-size:14px}
+h2{font-size:20px}
+@media(max-width:650px){
+ .row,.stats{grid-template-columns:1fr}
+ .tabs{flex-direction:column}
+ .tabs button{width:100%}
+}
 </style>
 </head>
+
 <body>
 
 <header>
 <h1>Central de Vendas</h1>
-<small style="color:#cbd5e1">Gestão de clientes e oportunidades</small>
+<small>Gestão de clientes, pedidos e oportunidades</small>
 </header>
 
 <main>
@@ -42,55 +56,137 @@ small{color:#64748b}
 <input id="username" placeholder="Usuário" autocomplete="username">
 <input id="password" type="password" placeholder="Senha" autocomplete="current-password">
 <button onclick="login()">Entrar</button>
-<p id="loginMessage"></p>
+<p id="loginMessage" class="message"></p>
 </section>
 
 <section id="panel" class="hidden">
 
 <div class="stats">
-<div class="card stat">Clientes cadastrados<strong id="total">0</strong></div>
-<div class="card stat">Novos<strong id="newTotal">0</strong></div>
-<div class="card stat">Em andamento<strong id="workingTotal">0</strong></div>
+<div class="card stat">
+Clientes cadastrados
+<strong id="total">0</strong>
+</div>
+<div class="card stat">
+Vendas registradas
+<strong id="salesTotal">0</strong>
+</div>
+<div class="card stat">
+Total recebido
+<strong id="revenue">R$ 0,00</strong>
+</div>
 </div>
 
 <div class="card">
-<div class="actions" style="justify-content:space-between">
-<h2>Meus clientes</h2>
+<div class="actions" style="justify-content:space-between;align-items:center">
+<h2>Central de Vendas</h2>
 <button class="secondary" onclick="logout()">Sair</button>
 </div>
-<button onclick="exportContacts()">Exportar contatos CSV</button>
+
+<div class="tabs">
+<button id="clientsTab" class="active" onclick="showSection('clients')">Clientes</button>
+<button id="salesTab" onclick="showSection('sales')">Vendas e pedidos</button>
+</div>
 </div>
 
+<!-- ÁREA DE CLIENTES -->
+<section id="clientsSection">
+
 <div class="card">
-<h2 id="formTitle">Adicionar cliente</h2>
+<h2>Adicionar cliente</h2>
+
 <input id="contactId" type="hidden">
 <input id="name" placeholder="Nome do cliente *">
+
 <div class="row">
 <input id="phone" placeholder="Telefone / WhatsApp">
 <input id="email" placeholder="E-mail">
 </div>
+
 <select id="status">
 <option>Novo</option>
 <option>Em andamento</option>
 <option>Concluído</option>
 </select>
+
 <textarea id="notes" placeholder="Observações"></textarea>
+
 <button onclick="saveContact()">Salvar cliente</button>
 <button class="secondary" onclick="clearForm()">Limpar formulário</button>
-<p id="formMessage"></p>
+<p id="formMessage" class="message"></p>
 </div>
 
 <div class="card">
 <h2>Lista de clientes</h2>
 <input id="search" placeholder="Buscar por nome ou telefone..." oninput="renderContacts()">
 <div id="contacts"></div>
+<button class="secondary" onclick="exportContacts()">Exportar contatos CSV</button>
 </div>
+
+</section>
+
+<!-- ÁREA DE VENDAS -->
+<section id="salesSection" class="hidden">
+
+<div class="card">
+<h2 id="saleFormTitle">Cadastrar venda ou pedido</h2>
+
+<input id="saleId" type="hidden">
+
+<input id="customerName" list="customerOptions" placeholder="Nome do cliente *">
+<datalist id="customerOptions"></datalist>
+
+<input id="product" placeholder="Produto ou serviço *">
+
+<div class="row">
+<input id="amount" type="number" min="0" step="0.01" placeholder="Valor da venda (R$)">
+<select id="saleStatus">
+<option>Pendente</option>
+<option>Pago</option>
+<option>Cancelado</option>
+</select>
+</div>
+
+<textarea id="saleNotes" placeholder="Observações do pedido"></textarea>
+
+<button onclick="saveSale()">Salvar venda</button>
+<button class="secondary" onclick="clearSaleForm()">Limpar formulário</button>
+
+<p id="saleMessage" class="message"></p>
+</div>
+
+<div class="card">
+<h2>Resumo das vendas</h2>
+<div class="stats">
+<div class="stat">
+<small>Vendas pagas</small>
+<strong id="paidTotal">0</strong>
+</div>
+<div class="stat">
+<small>Pendentes</small>
+<strong id="pendingTotal">0</strong>
+</div>
+<div class="stat">
+<small>Canceladas</small>
+<strong id="cancelledTotal">0</strong>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Histórico de vendas</h2>
+<input id="saleSearch" placeholder="Buscar por cliente ou produto..." oninput="renderSales()">
+<div id="salesList"></div>
+<button class="secondary" onclick="exportSales()">Exportar vendas CSV</button>
+</div>
+
+</section>
 
 </section>
 </main>
 
 <script>
 let contacts=[];
+let sales=[];
 let sessionToken=null;
 
 async function api(url,options={}){
@@ -117,6 +213,13 @@ async function api(url,options={}){
   return data;
 }
 
+function money(value){
+  return Number(value||0).toLocaleString("pt-BR",{
+    style:"currency",
+    currency:"BRL"
+  });
+}
+
 async function login(){
   const message=document.getElementById("loginMessage");
   message.textContent="Entrando...";
@@ -135,7 +238,10 @@ async function login(){
     document.getElementById("login").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
 
-    await loadContacts();
+    await Promise.all([
+      loadContacts(),
+      loadSales()
+    ]);
 
   }catch(error){
     message.textContent=error.message;
@@ -149,6 +255,7 @@ async function logout(){
 
   sessionToken=null;
   contacts=[];
+  sales=[];
 
   document.getElementById("panel").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
@@ -156,10 +263,27 @@ async function logout(){
   document.getElementById("loginMessage").textContent="";
 }
 
+function showSection(section){
+  const clients=section==="clients";
+
+  document.getElementById("clientsSection").classList.toggle("hidden",!clients);
+  document.getElementById("salesSection").classList.toggle("hidden",clients);
+
+  document.getElementById("clientsTab").classList.toggle("active",clients);
+  document.getElementById("salesTab").classList.toggle("active",!clients);
+
+  if(!clients){
+    loadSales();
+  }
+}
+
+// CLIENTES
+
 async function loadContacts(){
   try{
     contacts=await api("/api/contacts");
     renderContacts();
+    updateCustomerOptions();
   }catch(error){
     document.getElementById("contacts").textContent=error.message;
   }
@@ -174,10 +298,6 @@ function renderContacts(){
   );
 
   document.getElementById("total").textContent=contacts.length;
-  document.getElementById("newTotal").textContent=
-    contacts.filter(c=>c.status==="Novo").length;
-  document.getElementById("workingTotal").textContent=
-    contacts.filter(c=>c.status==="Em andamento").length;
 
   const list=document.getElementById("contacts");
   list.innerHTML="";
@@ -218,6 +338,17 @@ function renderContacts(){
   });
 }
 
+function updateCustomerOptions(){
+  const options=document.getElementById("customerOptions");
+  options.innerHTML="";
+
+  contacts.forEach(c=>{
+    const option=document.createElement("option");
+    option.value=c.name;
+    options.append(option);
+  });
+}
+
 async function saveContact(){
   const id=document.getElementById("contactId").value;
 
@@ -230,8 +361,7 @@ async function saveContact(){
   };
 
   if(!data.name.trim()){
-    document.getElementById("formMessage").textContent=
-      "Digite o nome do cliente.";
+    document.getElementById("formMessage").textContent="Digite o nome do cliente.";
     return;
   }
 
@@ -241,15 +371,12 @@ async function saveContact(){
       body:JSON.stringify(data)
     });
 
-    document.getElementById("formMessage").textContent=
-      "Cliente salvo com sucesso!";
-
+    document.getElementById("formMessage").textContent="Cliente salvo com sucesso!";
     clearForm();
     await loadContacts();
 
   }catch(error){
-    document.getElementById("formMessage").textContent=
-      error.message;
+    document.getElementById("formMessage").textContent=error.message;
   }
 }
 
@@ -260,8 +387,8 @@ function editContact(c){
   document.getElementById("email").value=c.email||"";
   document.getElementById("status").value=c.status||"Novo";
   document.getElementById("notes").value=c.notes||"";
-  document.getElementById("formTitle").textContent="Editar cliente";
 
+  document.getElementById("formTitle").textContent="Editar cliente";
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -286,8 +413,177 @@ function clearForm(){
 }
 
 async function exportContacts(){
+  await downloadCSV("/api/contacts/export","contatos.csv");
+}
+
+// VENDAS
+
+async function loadSales(){
   try{
-    const response=await fetch("/api/contacts/export",{
+    sales=await api("/api/sales");
+    renderSales();
+  }catch(error){
+    document.getElementById("salesList").textContent=error.message;
+  }
+}
+
+function renderSales(){
+  const term=document.getElementById("saleSearch").value.toLowerCase();
+
+  const filtered=sales.filter(s=>
+    (s.customer_name||"").toLowerCase().includes(term)||
+    (s.product||"").toLowerCase().includes(term)
+  );
+
+  const paid=sales.filter(s=>s.status==="Pago");
+  const pending=sales.filter(s=>s.status==="Pendente");
+  const cancelled=sales.filter(s=>s.status==="Cancelado");
+
+  const revenue=paid.reduce((sum,s)=>sum+Number(s.amount||0),0);
+
+  document.getElementById("salesTotal").textContent=sales.length;
+  document.getElementById("revenue").textContent=money(revenue);
+  document.getElementById("paidTotal").textContent=paid.length;
+  document.getElementById("pendingTotal").textContent=pending.length;
+  document.getElementById("cancelledTotal").textContent=cancelled.length;
+
+  const list=document.getElementById("salesList");
+  list.innerHTML="";
+
+  if(!filtered.length){
+    list.textContent="Nenhuma venda encontrada.";
+    return;
+  }
+
+  filtered.forEach(s=>{
+    const item=document.createElement("div");
+    item.className="contact";
+
+    const title=document.createElement("h3");
+    title.textContent=s.customer_name;
+
+    const product=document.createElement("p");
+    product.textContent="Produto/serviço: "+s.product;
+
+    const value=document.createElement("p");
+    value.className="money";
+    value.textContent=money(s.amount);
+
+    const status=document.createElement("span");
+    status.className="status";
+    status.textContent=s.status;
+
+    const notes=document.createElement("p");
+    notes.className="muted";
+    notes.textContent=s.notes||"";
+
+    const date=document.createElement("p");
+    date.className="muted";
+    date.textContent=s.created_at
+      ? "Data: "+new Date(s.created_at).toLocaleString("pt-BR")
+      : "";
+
+    const actions=document.createElement("div");
+    actions.className="actions";
+
+    const edit=document.createElement("button");
+    edit.className="secondary";
+    edit.textContent="Editar";
+    edit.onclick=()=>editSale(s);
+
+    const remove=document.createElement("button");
+    remove.className="danger";
+    remove.textContent="Excluir";
+    remove.onclick=()=>deleteSale(s.id);
+
+    actions.append(edit,remove);
+    item.append(title,product,value,status,notes,date,actions);
+    list.append(item);
+  });
+}
+
+async function saveSale(){
+  const id=document.getElementById("saleId").value;
+
+  const data={
+    customer_name:document.getElementById("customerName").value,
+    product:document.getElementById("product").value,
+    amount:document.getElementById("amount").value,
+    status:document.getElementById("saleStatus").value,
+    notes:document.getElementById("saleNotes").value
+  };
+
+  if(!data.customer_name.trim()){
+    document.getElementById("saleMessage").textContent="Informe o nome do cliente.";
+    return;
+  }
+
+  if(!data.product.trim()){
+    document.getElementById("saleMessage").textContent="Informe o produto ou serviço.";
+    return;
+  }
+
+  if(data.amount===""||!Number.isFinite(Number(data.amount))||Number(data.amount)<0){
+    document.getElementById("saleMessage").textContent="Informe um valor válido.";
+    return;
+  }
+
+  try{
+    await api(id?"/api/sales/"+id:"/api/sales",{
+      method:id?"PUT":"POST",
+      body:JSON.stringify(data)
+    });
+
+    document.getElementById("saleMessage").textContent="Venda salva com sucesso!";
+    clearSaleForm();
+    await loadSales();
+
+  }catch(error){
+    document.getElementById("saleMessage").textContent=error.message;
+  }
+}
+
+function editSale(s){
+  document.getElementById("saleId").value=s.id;
+  document.getElementById("customerName").value=s.customer_name||"";
+  document.getElementById("product").value=s.product||"";
+  document.getElementById("amount").value=s.amount||0;
+  document.getElementById("saleStatus").value=s.status||"Pendente";
+  document.getElementById("saleNotes").value=s.notes||"";
+
+  document.getElementById("saleFormTitle").textContent="Editar venda";
+  document.getElementById("saleMessage").textContent="";
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function deleteSale(id){
+  if(!confirm("Deseja realmente excluir esta venda?"))return;
+
+  try{
+    await api("/api/sales/"+id,{method:"DELETE"});
+    await loadSales();
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+function clearSaleForm(){
+  ["saleId","customerName","product","amount","saleNotes"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+
+  document.getElementById("saleStatus").value="Pendente";
+  document.getElementById("saleFormTitle").textContent="Cadastrar venda ou pedido";
+}
+
+async function exportSales(){
+  await downloadCSV("/api/sales/export","vendas.csv");
+}
+
+async function downloadCSV(endpoint,filename){
+  try{
+    const response=await fetch(endpoint,{
       headers:{
         Authorization:"Bearer "+sessionToken
       }
@@ -295,7 +591,7 @@ async function exportContacts(){
 
     if(!response.ok){
       const data=await response.json().catch(()=>({}));
-      throw new Error(data.error||"Erro ao exportar contatos.");
+      throw new Error(data.error||"Erro ao exportar.");
     }
 
     const blob=await response.blob();
@@ -303,12 +599,12 @@ async function exportContacts(){
     const link=document.createElement("a");
 
     link.href=url;
-    link.download="contatos.csv";
+    link.download=filename;
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    URL.revokeObjectURL(url);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
 
   }catch(error){
     alert(error.message);
