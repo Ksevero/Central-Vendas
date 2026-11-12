@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central de Vendas</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f5f9;color:#202938;font-family:Arial,sans-serif}
+header{background:#17243a;color:white;padding:20px}
+header h1{margin:0;font-size:22px}
+main{max-width:1000px;margin:25px auto;padding:15px}
+.card{background:white;border-radius:13px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0000000c}
+input,select,textarea,button{font:inherit;padding:12px;border:1px solid #dce1e9;border-radius:8px;width:100%;margin:6px 0}
+button{background:#2463eb;color:white;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#e9eef8;color:#24344e}
+button.danger{background:#c63d49}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat strong{display:block;font-size:26px;margin-top:8px}
+.contact{border:1px solid #e6e9ef;padding:14px;border-radius:10px;margin:10px 0}
+.contact h3{margin:0 0 8px}
+small{color:#64748b}
+.hidden{display:none}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions button{width:auto}
+@media(max-width:600px){.row,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Central de Vendas</h1><small style="color:#cbd5e1">Gestão de clientes e oportunidades</small></header>
+<main>
+<section id="login" class="card">
+<h2>Acessar painel</h2>
+<input id="username" placeholder="Usuário" autocomplete="username">
+<input id="password" type="password" placeholder="Senha" autocomplete="current-password">
+<button onclick="login()">Entrar</button>
+<p id="loginMessage"></p>
+</section>
+
+<section id="panel" class="hidden">
+<div class="stats">
+<div class="card stat">Clientes cadastrados<strong id="total">0</strong></div>
+<div class="card stat">Novos<strong id="newTotal">0</strong></div>
+<div class="card stat">Em andamento<strong id="workingTotal">0</strong></div>
+</div>
+
+<div class="card">
+<div class="actions" style="justify-content:space-between">
+<h2>Meus clientes</h2>
+<button class="secondary" onclick="logout()">Sair</button>
+</div>
+<button onclick="exportContacts()">Exportar contatos CSV</button>
+</div>
+
+<div class="card">
+<h2 id="formTitle">Adicionar cliente</h2>
+<input id="contactId" type="hidden">
+<input id="name" placeholder="Nome do cliente *">
+<div class="row">
+<input id="phone" placeholder="Telefone / WhatsApp">
+<input id="email" placeholder="E-mail">
+</div>
+<select id="status">
+<option>Novo</option>
+<option>Em andamento</option>
+<option>Concluído</option>
+</select>
+<textarea id="notes" placeholder="Observações"></textarea>
+<button onclick="saveContact()">Salvar cliente</button>
+<button class="secondary" onclick="clearForm()">Limpar formulário</button>
+<p id="formMessage"></p>
+</div>
+
+<div class="card">
+<h2>Lista de clientes</h2>
+<input id="search" placeholder="Buscar por nome ou telefone..." oninput="renderContacts()">
+<div id="contacts"></div>
+</div>
+</section>
+</main>
+
+<script>
+let contacts=[];
+
+async function api(url,options={}){
+  const response=await fetch(url,{
+    ...options,
+    headers:{"Content-Type":"application/json",...(options.headers||{})}
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok) throw new Error(data.error||"Ocorreu um erro.");
+  return data;
+}
+
+async function login(){
+  const message=document.getElementById("loginMessage");
+  message.textContent="Entrando...";
+  try{
+    await api("/api/login",{
+      method:"POST",
+      body:JSON.stringify({
+        username:document.getElementById("username").value,
+        password:document.getElementById("password").value
+      })
+    });
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+    await loadContacts();
+  }catch(error){message.textContent=error.message;}
+}
+
+async function logout(){
+  try{await api("/api/logout",{method:"POST"});}catch(e){}
+  document.getElementById("panel").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("password").value="";
+}
+
+async function loadContacts(){
+  try{
+    contacts=await api("/api/contacts");
+    renderContacts();
+  }catch(error){
+    document.getElementById("contacts").textContent=error.message;
+  }
+}
+
+function renderContacts(){
+  const term=document.getElementById("search").value.toLowerCase();
+  const filtered=contacts.filter(c=>
+    (c.name||"").toLowerCase().includes(term)||
+    (c.phone||"").toLowerCase().includes(term)
+  );
+  document.getElementById("total").textContent=contacts.length;
+  document.getElementById("newTotal").textContent=contacts.filter(c=>c.status==="Novo").length;
+  document.getElementById("workingTotal").textContent=contacts.filter(c=>c.status==="Em andamento").length;
+  const list=document.getElementById("contacts");
+  list.innerHTML="";
+  if(!filtered.length){list.textContent="Nenhum cliente encontrado.";return;}
+  filtered.forEach(c=>{
+    const item=document.createElement("div");
+    item.className="contact";
+    const title=document.createElement("h3");
+    title.textContent=c.name;
+    const details=document.createElement("p");
+    details.textContent=[c.phone,c.email,c.status,c.notes].filter(Boolean).join(" • ");
+    const actions=document.createElement("div");
+    actions.className="actions";
+    const edit=document.createElement("button");
+    edit.className="secondary";
+    edit.textContent="Editar";
+    edit.onclick=()=>editContact(c);
+    const remove=document.createElement("button");
+    remove.className="danger";
+    remove.textContent="Excluir";
+    remove.onclick=()=>deleteContact(c.id);
+    actions.append(edit,remove);
+    item.append(title,details,actions);
+    list.append(item);
+  });
+}
+
+async function saveContact(){
+  const id=document.getElementById("contactId").value;
+  const data={
+    name:document.getElementById("name").value,
+    phone:document.getElementById("phone").value,
+    email:document.getElementById("email").value,
+    status:document.getElementById("status").value,
+    notes:document.getElementById("notes").value
+  };
+  try{
+    await api(id?"/api/contacts/"+id:"/api/contacts",{
+      method:id?"PUT":"POST",
+      body:JSON.stringify(data)
+    });
+    document.getElementById("formMessage").textContent="Cliente salvo com sucesso!";
+    clearForm();
+    await loadContacts();
+  }catch(error){
+    document.getElementById("formMessage").textContent=error.message;
+  }
+}
+
+function editContact(c){
+  document.getElementById("contactId").value=c.id;
+  document.getElementById("name").value=c.name||"";
+  document.getElementById("phone").value=c.phone||"";
+  document.getElementById("email").value=c.email||"";
+  document.getElementById("status").value=c.status||"Novo";
+  document.getElementById("notes").value=c.notes||"";
+  document.getElementById("formTitle").textContent="Editar cliente";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function deleteContact(id){
+  if(!confirm("Deseja realmente excluir este cliente?"))return;
+  try{
+    await api("/api/contacts/"+id,{method:"DELETE"});
+    await loadContacts();
+  }catch(error){alert(error.message);}
+}
+
+function clearForm(){
+  ["contactId","name","phone","email","notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("status").value="Novo";
+  document.getElementById("formTitle").textContent="Adicionar cliente";
+}
+
+function exportContacts(){
+  window.location.href="/api/contacts/export";
+}
+</script>
+</body>
+</html>
