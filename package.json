@@ -1,11 +1,9 @@
-
 {
   "name": "central-vendas",
-  "version": "0.5.1",
-  "description": "Central de Vendas",
-  "main": "server.js",
+  "version": "0.5.2",
+  "main": "server.js/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js/server.js"
   },
   "engines": {
     "node": ">=20"
