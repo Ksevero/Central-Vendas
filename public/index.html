@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Central de Vendas</title>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f9;color:#202938;font-family:Arial,sans-serif}
@@ -35,22 +34,18 @@ button.danger{background:#c63d49}
 .message{min-height:20px;font-size:14px}
 h2{font-size:20px}
 @media(max-width:650px){
- .row,.stats{grid-template-columns:1fr}
- .tabs{flex-direction:column}
- .tabs button{width:100%}
+.row,.stats{grid-template-columns:1fr}
+.tabs{flex-direction:column}
+.tabs button{width:100%}
 }
 </style>
 </head>
-
 <body>
-
 <header>
 <h1>Central de Vendas</h1>
 <small>Gestão de clientes, pedidos e oportunidades</small>
 </header>
-
 <main>
-
 <section id="login" class="card">
 <h2>Acessar painel</h2>
 <input id="username" placeholder="Usuário" autocomplete="username">
@@ -60,20 +55,10 @@ h2{font-size:20px}
 </section>
 
 <section id="panel" class="hidden">
-
 <div class="stats">
-<div class="card stat">
-Clientes cadastrados
-<strong id="total">0</strong>
-</div>
-<div class="card stat">
-Vendas registradas
-<strong id="salesTotal">0</strong>
-</div>
-<div class="card stat">
-Total recebido
-<strong id="revenue">R$ 0,00</strong>
-</div>
+<div class="card stat">Clientes cadastrados<strong id="total">0</strong></div>
+<div class="card stat">Vendas registradas<strong id="salesTotal">0</strong></div>
+<div class="card stat">Total recebido<strong id="revenue">R$ 0,00</strong></div>
 </div>
 
 <div class="card">
@@ -81,35 +66,27 @@ Total recebido
 <h2>Central de Vendas</h2>
 <button class="secondary" onclick="logout()">Sair</button>
 </div>
-
 <div class="tabs">
 <button id="clientsTab" class="active" onclick="showSection('clients')">Clientes</button>
 <button id="salesTab" onclick="showSection('sales')">Vendas e pedidos</button>
 </div>
 </div>
 
-<!-- ÁREA DE CLIENTES -->
 <section id="clientsSection">
-
 <div class="card">
-<h2>Adicionar cliente</h2>
-
+<h2 id="formTitle">Adicionar cliente</h2>
 <input id="contactId" type="hidden">
 <input id="name" placeholder="Nome do cliente *">
-
 <div class="row">
 <input id="phone" placeholder="Telefone / WhatsApp">
 <input id="email" placeholder="E-mail">
 </div>
-
 <select id="status">
 <option>Novo</option>
 <option>Em andamento</option>
 <option>Concluído</option>
 </select>
-
 <textarea id="notes" placeholder="Observações"></textarea>
-
 <button onclick="saveContact()">Salvar cliente</button>
 <button class="secondary" onclick="clearForm()">Limpar formulário</button>
 <p id="formMessage" class="message"></p>
@@ -121,22 +98,15 @@ Total recebido
 <div id="contacts"></div>
 <button class="secondary" onclick="exportContacts()">Exportar contatos CSV</button>
 </div>
-
 </section>
 
-<!-- ÁREA DE VENDAS -->
 <section id="salesSection" class="hidden">
-
 <div class="card">
 <h2 id="saleFormTitle">Cadastrar venda ou pedido</h2>
-
 <input id="saleId" type="hidden">
-
 <input id="customerName" list="customerOptions" placeholder="Nome do cliente *">
 <datalist id="customerOptions"></datalist>
-
 <input id="product" placeholder="Produto ou serviço *">
-
 <div class="row">
 <input id="amount" type="number" min="0" step="0.01" placeholder="Valor da venda (R$)">
 <select id="saleStatus">
@@ -145,30 +115,18 @@ Total recebido
 <option>Cancelado</option>
 </select>
 </div>
-
 <textarea id="saleNotes" placeholder="Observações do pedido"></textarea>
-
 <button onclick="saveSale()">Salvar venda</button>
 <button class="secondary" onclick="clearSaleForm()">Limpar formulário</button>
-
 <p id="saleMessage" class="message"></p>
 </div>
 
 <div class="card">
 <h2>Resumo das vendas</h2>
 <div class="stats">
-<div class="stat">
-<small>Vendas pagas</small>
-<strong id="paidTotal">0</strong>
-</div>
-<div class="stat">
-<small>Pendentes</small>
-<strong id="pendingTotal">0</strong>
-</div>
-<div class="stat">
-<small>Canceladas</small>
-<strong id="cancelledTotal">0</strong>
-</div>
+<div class="stat"><small>Vendas pagas</small><strong id="paidTotal">0</strong></div>
+<div class="stat"><small>Pendentes</small><strong id="pendingTotal">0</strong></div>
+<div class="stat"><small>Canceladas</small><strong id="cancelledTotal">0</strong></div>
 </div>
 </div>
 
@@ -178,9 +136,7 @@ Total recebido
 <div id="salesList"></div>
 <button class="secondary" onclick="exportSales()">Exportar vendas CSV</button>
 </div>
-
 </section>
-
 </section>
 </main>
 
@@ -190,40 +146,21 @@ let sales=[];
 let sessionToken=null;
 
 async function api(url,options={}){
-  const headers={
-    "Content-Type":"application/json",
-    ...(options.headers||{})
-  };
-
-  if(sessionToken){
-    headers.Authorization="Bearer "+sessionToken;
-  }
-
-  const response=await fetch(url,{
-    ...options,
-    headers
-  });
-
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(sessionToken) headers.Authorization="Bearer "+sessionToken;
+  const response=await fetch(url,{...options,headers});
   const data=await response.json().catch(()=>({}));
-
-  if(!response.ok){
-    throw new Error(data.error||"Ocorreu um erro.");
-  }
-
+  if(!response.ok) throw new Error(data.error||"Ocorreu um erro.");
   return data;
 }
 
 function money(value){
-  return Number(value||0).toLocaleString("pt-BR",{
-    style:"currency",
-    currency:"BRL"
-  });
+  return Number(value||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
 
 async function login(){
   const message=document.getElementById("loginMessage");
   message.textContent="Entrando...";
-
   try{
     const result=await api("/api/login",{
       method:"POST",
@@ -232,31 +169,18 @@ async function login(){
         password:document.getElementById("password").value
       })
     });
-
     sessionToken=result.token;
-
     document.getElementById("login").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
-
-    await Promise.all([
-      loadContacts(),
-      loadSales()
-    ]);
-
-  }catch(error){
-    message.textContent=error.message;
-  }
+    await Promise.all([loadContacts(),loadSales()]);
+  }catch(error){message.textContent=error.message;}
 }
 
 async function logout(){
-  try{
-    await api("/api/logout",{method:"POST"});
-  }catch(e){}
-
+  try{await api("/api/logout",{method:"POST"});}catch(e){}
   sessionToken=null;
   contacts=[];
   sales=[];
-
   document.getElementById("panel").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
   document.getElementById("password").value="";
@@ -265,20 +189,14 @@ async function logout(){
 
 function showSection(section){
   const clients=section==="clients";
-
   document.getElementById("clientsSection").classList.toggle("hidden",!clients);
   document.getElementById("salesSection").classList.toggle("hidden",clients);
-
   document.getElementById("clientsTab").classList.toggle("active",clients);
   document.getElementById("salesTab").classList.toggle("active",!clients);
-
-  if(!clients){
-    loadSales();
-  }
+  if(!clients) loadSales();
 }
 
 // CLIENTES
-
 async function loadContacts(){
   try{
     contacts=await api("/api/contacts");
@@ -291,47 +209,32 @@ async function loadContacts(){
 
 function renderContacts(){
   const term=document.getElementById("search").value.toLowerCase();
-
   const filtered=contacts.filter(c=>
     (c.name||"").toLowerCase().includes(term)||
     (c.phone||"").toLowerCase().includes(term)
   );
-
   document.getElementById("total").textContent=contacts.length;
-
   const list=document.getElementById("contacts");
   list.innerHTML="";
-
-  if(!filtered.length){
-    list.textContent="Nenhum cliente encontrado.";
-    return;
-  }
+  if(!filtered.length){list.textContent="Nenhum cliente encontrado.";return;}
 
   filtered.forEach(c=>{
     const item=document.createElement("div");
     item.className="contact";
-
     const title=document.createElement("h3");
     title.textContent=c.name;
-
     const details=document.createElement("p");
-    details.textContent=[
-      c.phone,c.email,c.status,c.notes
-    ].filter(Boolean).join(" • ");
-
+    details.textContent=[c.phone,c.email,c.status,c.notes].filter(Boolean).join(" • ");
     const actions=document.createElement("div");
     actions.className="actions";
-
     const edit=document.createElement("button");
     edit.className="secondary";
     edit.textContent="Editar";
     edit.onclick=()=>editContact(c);
-
     const remove=document.createElement("button");
     remove.className="danger";
     remove.textContent="Excluir";
     remove.onclick=()=>deleteContact(c.id);
-
     actions.append(edit,remove);
     item.append(title,details,actions);
     list.append(item);
@@ -341,7 +244,6 @@ function renderContacts(){
 function updateCustomerOptions(){
   const options=document.getElementById("customerOptions");
   options.innerHTML="";
-
   contacts.forEach(c=>{
     const option=document.createElement("option");
     option.value=c.name;
@@ -351,7 +253,7 @@ function updateCustomerOptions(){
 
 async function saveContact(){
   const id=document.getElementById("contactId").value;
-
+  const message=document.getElementById("formMessage");
   const data={
     name:document.getElementById("name").value,
     phone:document.getElementById("phone").value,
@@ -359,25 +261,16 @@ async function saveContact(){
     status:document.getElementById("status").value,
     notes:document.getElementById("notes").value
   };
-
-  if(!data.name.trim()){
-    document.getElementById("formMessage").textContent="Digite o nome do cliente.";
-    return;
-  }
-
+  if(!data.name.trim()){message.textContent="Digite o nome do cliente.";return;}
   try{
     await api(id?"/api/contacts/"+id:"/api/contacts",{
       method:id?"PUT":"POST",
       body:JSON.stringify(data)
     });
-
-    document.getElementById("formMessage").textContent="Cliente salvo com sucesso!";
     clearForm();
+    message.textContent="Cliente salvo com sucesso!";
     await loadContacts();
-
-  }catch(error){
-    document.getElementById("formMessage").textContent=error.message;
-  }
+  }catch(error){message.textContent=error.message;}
 }
 
 function editContact(c){
@@ -387,27 +280,21 @@ function editContact(c){
   document.getElementById("email").value=c.email||"";
   document.getElementById("status").value=c.status||"Novo";
   document.getElementById("notes").value=c.notes||"";
-
   document.getElementById("formTitle").textContent="Editar cliente";
+  document.getElementById("formMessage").textContent="";
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
 async function deleteContact(id){
   if(!confirm("Deseja realmente excluir este cliente?"))return;
-
-  try{
-    await api("/api/contacts/"+id,{method:"DELETE"});
-    await loadContacts();
-  }catch(error){
-    alert(error.message);
-  }
+  try{await api("/api/contacts/"+id,{method:"DELETE"});await loadContacts();}
+  catch(error){alert(error.message);}
 }
 
 function clearForm(){
   ["contactId","name","phone","email","notes"].forEach(id=>{
     document.getElementById(id).value="";
   });
-
   document.getElementById("status").value="Novo";
   document.getElementById("formTitle").textContent="Adicionar cliente";
 }
@@ -417,30 +304,21 @@ async function exportContacts(){
 }
 
 // VENDAS
-
 async function loadSales(){
-  try{
-    sales=await api("/api/sales");
-    renderSales();
-  }catch(error){
-    document.getElementById("salesList").textContent=error.message;
-  }
+  try{sales=await api("/api/sales");renderSales();}
+  catch(error){document.getElementById("salesList").textContent=error.message;}
 }
 
 function renderSales(){
   const term=document.getElementById("saleSearch").value.toLowerCase();
-
   const filtered=sales.filter(s=>
     (s.customer_name||"").toLowerCase().includes(term)||
     (s.product||"").toLowerCase().includes(term)
   );
-
   const paid=sales.filter(s=>s.status==="Pago");
   const pending=sales.filter(s=>s.status==="Pendente");
   const cancelled=sales.filter(s=>s.status==="Cancelado");
-
   const revenue=paid.reduce((sum,s)=>sum+Number(s.amount||0),0);
-
   document.getElementById("salesTotal").textContent=sales.length;
   document.getElementById("revenue").textContent=money(revenue);
   document.getElementById("paidTotal").textContent=paid.length;
@@ -449,53 +327,37 @@ function renderSales(){
 
   const list=document.getElementById("salesList");
   list.innerHTML="";
-
-  if(!filtered.length){
-    list.textContent="Nenhuma venda encontrada.";
-    return;
-  }
+  if(!filtered.length){list.textContent="Nenhuma venda encontrada.";return;}
 
   filtered.forEach(s=>{
     const item=document.createElement("div");
     item.className="contact";
-
     const title=document.createElement("h3");
     title.textContent=s.customer_name;
-
     const product=document.createElement("p");
     product.textContent="Produto/serviço: "+s.product;
-
     const value=document.createElement("p");
     value.className="money";
     value.textContent=money(s.amount);
-
     const status=document.createElement("span");
     status.className="status";
     status.textContent=s.status;
-
     const notes=document.createElement("p");
     notes.className="muted";
     notes.textContent=s.notes||"";
-
     const date=document.createElement("p");
     date.className="muted";
-    date.textContent=s.created_at
-      ? "Data: "+new Date(s.created_at).toLocaleString("pt-BR")
-      : "";
-
+    date.textContent=s.created_at?"Data: "+new Date(s.created_at).toLocaleString("pt-BR"):"";
     const actions=document.createElement("div");
     actions.className="actions";
-
     const edit=document.createElement("button");
     edit.className="secondary";
     edit.textContent="Editar";
     edit.onclick=()=>editSale(s);
-
     const remove=document.createElement("button");
     remove.className="danger";
     remove.textContent="Excluir";
     remove.onclick=()=>deleteSale(s.id);
-
     actions.append(edit,remove);
     item.append(title,product,value,status,notes,date,actions);
     list.append(item);
@@ -504,7 +366,7 @@ function renderSales(){
 
 async function saveSale(){
   const id=document.getElementById("saleId").value;
-
+  const message=document.getElementById("saleMessage");
   const data={
     customer_name:document.getElementById("customerName").value,
     product:document.getElementById("product").value,
@@ -512,35 +374,20 @@ async function saveSale(){
     status:document.getElementById("saleStatus").value,
     notes:document.getElementById("saleNotes").value
   };
-
-  if(!data.customer_name.trim()){
-    document.getElementById("saleMessage").textContent="Informe o nome do cliente.";
-    return;
-  }
-
-  if(!data.product.trim()){
-    document.getElementById("saleMessage").textContent="Informe o produto ou serviço.";
-    return;
-  }
-
+  if(!data.customer_name.trim()){message.textContent="Informe o nome do cliente.";return;}
+  if(!data.product.trim()){message.textContent="Informe o produto ou serviço.";return;}
   if(data.amount===""||!Number.isFinite(Number(data.amount))||Number(data.amount)<0){
-    document.getElementById("saleMessage").textContent="Informe um valor válido.";
-    return;
+    message.textContent="Informe um valor válido.";return;
   }
-
   try{
     await api(id?"/api/sales/"+id:"/api/sales",{
       method:id?"PUT":"POST",
       body:JSON.stringify(data)
     });
-
-    document.getElementById("saleMessage").textContent="Venda salva com sucesso!";
     clearSaleForm();
+    message.textContent="Venda salva com sucesso!";
     await loadSales();
-
-  }catch(error){
-    document.getElementById("saleMessage").textContent=error.message;
-  }
+  }catch(error){message.textContent=error.message;}
 }
 
 function editSale(s){
@@ -550,29 +397,21 @@ function editSale(s){
   document.getElementById("amount").value=s.amount||0;
   document.getElementById("saleStatus").value=s.status||"Pendente";
   document.getElementById("saleNotes").value=s.notes||"";
-
   document.getElementById("saleFormTitle").textContent="Editar venda";
   document.getElementById("saleMessage").textContent="";
-
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
 async function deleteSale(id){
   if(!confirm("Deseja realmente excluir esta venda?"))return;
-
-  try{
-    await api("/api/sales/"+id,{method:"DELETE"});
-    await loadSales();
-  }catch(error){
-    alert(error.message);
-  }
+  try{await api("/api/sales/"+id,{method:"DELETE"});await loadSales();}
+  catch(error){alert(error.message);}
 }
 
 function clearSaleForm(){
   ["saleId","customerName","product","amount","saleNotes"].forEach(id=>{
     document.getElementById(id).value="";
   });
-
   document.getElementById("saleStatus").value="Pendente";
   document.getElementById("saleFormTitle").textContent="Cadastrar venda ou pedido";
 }
@@ -584,33 +423,23 @@ async function exportSales(){
 async function downloadCSV(endpoint,filename){
   try{
     const response=await fetch(endpoint,{
-      headers:{
-        Authorization:"Bearer "+sessionToken
-      }
+      headers:{Authorization:"Bearer "+sessionToken}
     });
-
     if(!response.ok){
       const data=await response.json().catch(()=>({}));
       throw new Error(data.error||"Erro ao exportar.");
     }
-
     const blob=await response.blob();
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");
-
     link.href=url;
     link.download=filename;
     document.body.appendChild(link);
     link.click();
     link.remove();
-
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-
-  }catch(error){
-    alert(error.message);
-  }
+  }catch(error){alert(error.message);}
 }
 </script>
-
 </body>
 </html>
