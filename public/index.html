@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -54,10 +55,72 @@ th{background:#f8fafc;color:#64748b}
 .goal-stats small{display:block;color:#64748b;font-size:11px}
 .goal-stats strong{font-size:14px}
 footer{text-align:center;color:#94a3b8;padding:20px;font-size:12px}
+
+/* WHATSAPP */
+.whatsapp-history{
+  background:#f0f2f5;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  padding:12px;
+  min-height:260px;
+  max-height:480px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.wa-message{
+  max-width:85%;
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:14px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.wa-message.inbound{
+  align-self:flex-start;
+  background:#fff;
+  border:1px solid #e2e8f0;
+}
+.wa-message.outbound{
+  align-self:flex-end;
+  background:#dcf8c6;
+}
+.wa-meta{
+  display:block;
+  margin-top:6px;
+  font-size:10px;
+  color:#64748b;
+  text-align:right;
+}
+.wa-compose{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:13px;
+}
+.wa-compose textarea{
+  min-height:90px;
+  resize:vertical;
+}
+.wa-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.wa-empty{
+  text-align:center;
+  color:#64748b;
+  padding:35px 10px;
+  font-size:13px;
+}
 @media(max-width:700px){
 .metrics{grid-template-columns:repeat(2,1fr)}
 .grid{grid-template-columns:1fr}
 nav button{flex:1}
+.wa-message{max-width:94%}
 }
 @media(max-width:420px){.goal-stats{grid-template-columns:1fr 1fr}}
 </style>
@@ -90,6 +153,7 @@ nav button{flex:1}
 <button data-tab="dashboard" class="active" onclick="showTab('dashboard',this)">Painel</button>
 <button data-tab="clients" class="admin-only" onclick="showTab('clients',this)">Clientes</button>
 <button data-tab="sales" onclick="showTab('sales',this)">Vendas</button>
+<button data-tab="whatsapp" class="admin-only" onclick="showTab('whatsapp',this)">WhatsApp</button>
 <button data-tab="finance" class="admin-only" onclick="showTab('finance',this)">Financeiro</button>
 <button onclick="logout()">Sair</button>
 </nav>
@@ -209,6 +273,57 @@ nav button{flex:1}
 </div>
 </section>
 
+<!-- WHATSAPP -->
+<section id="whatsapp" class="panel admin-only">
+<div class="card">
+<h2>WhatsApp Business</h2>
+<p class="muted">Selecione um cliente para consultar a conversa e enviar mensagens pelo WhatsApp conectado à API.</p>
+
+<div class="field">
+<label>Selecionar cliente</label>
+<select id="whatsappContact" onchange="selectWhatsappContact()">
+<option value="">Selecione um cliente...</option>
+</select>
+</div>
+
+<div class="field">
+<label>Número do WhatsApp</label>
+<input id="whatsappPhone" placeholder="Ex.: 5591999999999" inputmode="tel">
+<p class="muted">Use o número com código do país e DDD. Exemplo: 55 + DDD + número.</p>
+</div>
+
+<div class="actions">
+<button type="button" class="btn secondary" onclick="loadWhatsappHistory()">Atualizar conversa</button>
+</div>
+<div id="whatsappMessage" class="message"></div>
+</div>
+
+<div class="card">
+<div class="wa-top">
+<h2>Histórico da conversa</h2>
+<span class="tag">Mensagens recebidas e enviadas</span>
+</div>
+<div id="whatsappHistory" class="whatsapp-history">
+<div class="wa-empty">Selecione um cliente para carregar as mensagens.</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Enviar mensagem</h2>
+<form id="whatsappForm" onsubmit="sendWhatsappMessage(event)">
+<div class="wa-compose">
+<div class="field">
+<label>Mensagem</label>
+<textarea id="whatsappText" maxlength="4000" placeholder="Digite sua mensagem..." required></textarea>
+</div>
+<button class="btn" id="whatsappSendButton">Enviar mensagem</button>
+</div>
+<div id="whatsappSendMessage" class="message"></div>
+</form>
+<p class="muted">O envio depende da configuração correta da API oficial do WhatsApp no servidor. Fora da janela de atendimento de 24 horas, a Meta pode exigir um modelo de mensagem aprovado.</p>
+</div>
+</section>
+
 <section id="finance" class="panel admin-only">
 <div class="card">
 <h2>Painel financeiro</h2>
@@ -302,6 +417,7 @@ nav button{flex:1}
 let sessionToken=null;
 let user={role:'admin'};
 let contacts=[],sales=[],consultants=[],expenses=[],performance=[];
+let whatsappSelectedPhone='';
 
 const $=id=>document.getElementById(id);
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -367,6 +483,7 @@ async function logout(){
   try{await api('/api/logout',{method:'POST'})}catch{}
   sessionToken=null;
   user={role:'admin'};
+  whatsappSelectedPhone='';
   $('appScreen').classList.add('hidden');
   $('loginScreen').classList.remove('hidden');
 }
@@ -376,6 +493,10 @@ function showTab(id,b){
   $(id).classList.add('active');
   document.querySelectorAll('nav button[data-tab]').forEach(x=>x.classList.remove('active'));
   if(b)b.classList.add('active');
+
+  if(id==='whatsapp' && user.role==='admin'){
+    updateWhatsappContacts();
+  }
 }
 
 async function loadAll(){
@@ -397,6 +518,7 @@ async function loadContacts(){
   contacts=await api('/api/contacts');
   renderContacts();
   $('customerOptions').innerHTML=contacts.map(c=>`<option value="${esc(c.name)}"></option>`).join('');
+  updateWhatsappContacts();
 }
 
 function renderContacts(){
@@ -485,6 +607,184 @@ async function deleteContact(id){
       await api('/api/contacts/'+id,{method:'DELETE'});
       await loadContacts();
     }catch(e){alert(e.message)}
+  }
+}
+
+// WHATSAPP
+function normalizeWhatsappPhone(value){
+  let phone=String(value||'').replace(/\D/g,'');
+  if(phone && !phone.startsWith('55')){
+    phone='55'+phone;
+  }
+  return phone;
+}
+
+function updateWhatsappContacts(){
+  if(!$('whatsappContact'))return;
+
+  let current=$('whatsappContact').value;
+  $('whatsappContact').innerHTML=
+    '<option value="">Selecione um cliente...</option>'+
+    contacts.map(c=>
+      `<option value="${esc(c.id)}">${esc(c.name)}${c.phone?' — '+esc(c.phone):''}</option>`
+    ).join('');
+
+  if(current && contacts.some(c=>String(c.id)===String(current))){
+    $('whatsappContact').value=current;
+  }
+}
+
+function selectWhatsappContact(){
+  let id=$('whatsappContact').value;
+  let contact=contacts.find(c=>String(c.id)===String(id));
+
+  if(!contact){
+    $('whatsappPhone').value='';
+    whatsappSelectedPhone='';
+    $('whatsappHistory').innerHTML=
+      '<div class="wa-empty">Selecione um cliente para carregar as mensagens.</div>';
+    return;
+  }
+
+  let phone=normalizeWhatsappPhone(contact.phone);
+  $('whatsappPhone').value=phone;
+  whatsappSelectedPhone=phone;
+
+  if(!phone){
+    $('whatsappHistory').innerHTML=
+      '<div class="wa-empty">Este cliente não tem telefone cadastrado. Informe o número acima.</div>';
+    msg('whatsappMessage','Informe o número de WhatsApp deste cliente.',true);
+    return;
+  }
+
+  msg('whatsappMessage','Carregando conversa...');
+  loadWhatsappHistory();
+}
+
+function whatsappStatusLabel(status){
+  const labels={
+    accepted:'Aceita pela API',
+    sent:'Enviada',
+    delivered:'Entregue',
+    read:'Lida',
+    failed:'Falhou',
+    received:'Recebida',
+    pending:'Pendente'
+  };
+  return labels[String(status||'').toLowerCase()]||String(status||'Status não informado');
+}
+
+function formatWhatsappDate(value){
+  if(!value)return '';
+  let date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '';
+  return date.toLocaleString('pt-BR',{
+    day:'2-digit',
+    month:'2-digit',
+    year:'2-digit',
+    hour:'2-digit',
+    minute:'2-digit'
+  });
+}
+
+async function loadWhatsappHistory(){
+  if(user.role!=='admin')return;
+
+  let phone=normalizeWhatsappPhone($('whatsappPhone').value);
+
+  if(!phone){
+    msg('whatsappMessage','Selecione um cliente ou informe um número válido.',true);
+    return;
+  }
+
+  $('whatsappPhone').value=phone;
+  whatsappSelectedPhone=phone;
+  $('whatsappHistory').innerHTML=
+    '<div class="wa-empty">Carregando mensagens...</div>';
+
+  try{
+    let data=await api('/api/whatsapp/messages?phone='+encodeURIComponent(phone));
+    let messages=Array.isArray(data)?data:(data.messages||[]);
+
+    if(!messages.length){
+      $('whatsappHistory').innerHTML=
+        '<div class="wa-empty">Nenhuma mensagem encontrada para este número.</div>';
+      msg('whatsappMessage','Conversa carregada.');
+      return;
+    }
+
+    $('whatsappHistory').innerHTML=messages.map(item=>{
+      let outgoing=String(item.direction||'').toLowerCase()==='outbound';
+      let body=item.body||'';
+      let date=formatWhatsappDate(item.message_timestamp||item.created_at);
+      let status=whatsappStatusLabel(item.status);
+
+      return `
+        <div class="wa-message ${outgoing?'outbound':'inbound'}">
+          <div>${esc(body||'Mensagem sem texto')}</div>
+          <span class="wa-meta">
+            ${outgoing?'Você':'Cliente'}
+            ${date?' · '+esc(date):''}
+            ${outgoing?' · '+esc(status):''}
+          </span>
+        </div>
+      `;
+    }).join('');
+
+    $('whatsappHistory').scrollTop=$('whatsappHistory').scrollHeight;
+    msg('whatsappMessage','Conversa atualizada. Status das mensagens exibidos no histórico.');
+  }catch(e){
+    $('whatsappHistory').innerHTML=
+      '<div class="wa-empty">Não foi possível carregar a conversa.</div>';
+    msg('whatsappMessage',e.message,true);
+  }
+}
+
+async function sendWhatsappMessage(e){
+  e.preventDefault();
+
+  if(user.role!=='admin'){
+    msg('whatsappSendMessage','Apenas o administrador pode enviar mensagens.',true);
+    return;
+  }
+
+  let phone=normalizeWhatsappPhone($('whatsappPhone').value);
+  let message=$('whatsappText').value.trim();
+
+  if(!phone){
+    msg('whatsappSendMessage','Informe um número de WhatsApp válido.',true);
+    return;
+  }
+
+  if(!message){
+    msg('whatsappSendMessage','Digite uma mensagem antes de enviar.',true);
+    return;
+  }
+
+  let button=$('whatsappSendButton');
+  button.disabled=true;
+  button.textContent='Enviando...';
+
+  try{
+    await api('/api/whatsapp/send',{
+      method:'POST',
+      body:JSON.stringify({
+        to:phone,
+        message:message
+      })
+    });
+
+    $('whatsappText').value='';
+    $('whatsappPhone').value=phone;
+    whatsappSelectedPhone=phone;
+    msg('whatsappSendMessage','Mensagem enviada para processamento pela API.');
+
+    await loadWhatsappHistory();
+  }catch(error){
+    msg('whatsappSendMessage',error.message,true);
+  }finally{
+    button.disabled=false;
+    button.textContent='Enviar mensagem';
   }
 }
 
